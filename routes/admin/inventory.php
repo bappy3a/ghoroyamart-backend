@@ -1,0 +1,43 @@
+<?php
+
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\PromotionLandingPageController;
+use App\Http\Controllers\Admin\ProductVariantController;
+use App\Http\Controllers\Admin\SliderController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\CustomPageController;
+use App\Http\Controllers\Admin\AboutPageSettingController;
+use App\Http\Controllers\Admin\InventoryDashboardController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VariantAttributeController;
+use App\Http\Controllers\Admin\VideoPromotionController;
+use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\FaqController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('inventory', [InventoryDashboardController::class, 'index'])->name('inventory.dashboard');
+Route::resource('categories', CategoryController::class)->except(['show']);
+Route::resource('brands', BrandController::class)->except(['show']);
+Route::resource('sliders', SliderController::class)->except(['show']);
+Route::resource('units', UnitController::class)->only(['index', 'store', 'update']);
+Route::resource('products', ProductController::class);
+Route::post('products/bulk-update-location', [ProductController::class, 'bulkUpdateLocation'])->name('products.bulk-update-location');
+Route::post('products/editor-upload', [\App\Http\Controllers\Admin\EditorUploadController::class, 'store'])->name('products.create-editor-upload');
+Route::resource('promotion-landing-pages', PromotionLandingPageController::class)->except(['show']);
+Route::post('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
+Route::get('products-data', [ProductController::class, 'getProductsData'])->name('products.data');
+Route::resource('variant-attributes', VariantAttributeController::class)->only(['index', 'store', 'update', 'destroy']);
+Route::resource('product-variants', ProductVariantController::class)->except(['show']);
+Route::resource('coupons', \App\Http\Controllers\Admin\CouponController::class)->except(['show']);
+Route::resource('flash-deals', \App\Http\Controllers\Admin\FlashDealController::class)->except(['show']);
+Route::get('flash-deals/products/search', [\App\Http\Controllers\Admin\FlashDealController::class, 'searchProducts'])->name('flash-deals.products.search');
+Route::resource('custom-pages', CustomPageController::class)->except(['show']);
+Route::resource('about-page-settings', AboutPageSettingController::class)->except(['show']);
+Route::resource('users', UserController::class)->except(['show']);
+Route::resource('video-promotions', VideoPromotionController::class)->except(['show']);
+Route::resource('blog-categories', BlogCategoryController::class)->except(['show']);
+Route::resource('blogs', BlogController::class);
+Route::resource('faqs', FaqController::class)->except(['show']);

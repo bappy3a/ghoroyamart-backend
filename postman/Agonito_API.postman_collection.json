@@ -1,0 +1,2158 @@
+{
+    "info": {
+        "_postman_id": "7e6813ae-ff14-4d96-a042-a60b170a2026",
+        "name": "Agonito API - Complete",
+        "description": "Complete collection generated from routes/api.php and all included API route files. Contains 55 requests covering every allowed API method, plus one CSRF setup utility request.\n\nQuick start: set base_url, run Authentication/Send OTP and Verify OTP, then use protected requests. For Promo Checkout, run Setup/Get CSRF Cookie first and preserve cookies.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "noauth"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "pm.request.headers.upsert({ key: 'Accept', value: 'application/json' });",
+                    "const xsrf = pm.cookies.get('XSRF-TOKEN');",
+                    "if (xsrf) pm.request.headers.upsert({ key: 'X-XSRF-TOKEN', value: decodeURIComponent(xsrf) });"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://agonito.test",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "phone",
+            "value": "01700000000",
+            "type": "string"
+        },
+        {
+            "key": "otp",
+            "value": "000000",
+            "type": "string"
+        },
+        {
+            "key": "promo_otp",
+            "value": "000000",
+            "type": "string"
+        },
+        {
+            "key": "product_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "variant_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "category_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "delivery_area_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "shipping_address_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "order_number",
+            "value": "AG-EXAMPLE",
+            "type": "string"
+        },
+        {
+            "key": "coupon_code",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "blog_slug",
+            "value": "example-blog",
+            "type": "string"
+        },
+        {
+            "key": "custom_page_slug",
+            "value": "about-us",
+            "type": "string"
+        },
+        {
+            "key": "flash_sale_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "promo_slug",
+            "value": "example-promo",
+            "type": "string"
+        },
+        {
+            "key": "external_sender_id",
+            "value": "postman-test-user",
+            "type": "string"
+        },
+        {
+            "key": "steadfast_webhook_secret",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "00 - Setup",
+            "description": "",
+            "item": [
+                {
+                    "name": "Get CSRF Cookie (required for Promo Checkout)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/sanctum/csrf-cookie",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "sanctum",
+                                "csrf-cookie"
+                            ]
+                        },
+                        "description": "Utility route (outside routes/api.php). Run once before promo checkout requests. Postman keeps the session and XSRF cookies automatically.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "01 - Authentication",
+            "description": "OTP authentication. Run Send OTP, Verify OTP, then authenticated requests.",
+            "item": [
+                {
+                    "name": "Send OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/send-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "send-otp"
+                            ]
+                        },
+                        "description": "Public. Bangladesh mobile format: 01XXXXXXXXX. Throttled to 5 requests/minute.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Resend OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/resend-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "resend-otp"
+                            ]
+                        },
+                        "description": "Public. Call after Send OTP and observe the resend cooldown.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/verify-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-otp"
+                            ]
+                        },
+                        "description": "Public. Stores the returned Sanctum token in the collection token variable.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\",\n    \"otp\": \"{{otp}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                                    "    const json = pm.response.json();",
+                                    "    const token = json?.data?.token ?? json?.token;",
+                                    "    if (token) pm.collectionVariables.set('token', token);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Current User",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "profile"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Customer\",\n    \"email\": \"customer@example.com\",\n    \"gender\": \"other\",\n    \"date_of_birth\": \"1995-01-01\",\n    \"delivery_area_id\": \"{{delivery_area_id}}\",\n    \"address\": \"House 10, Road 5, Dhaka\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "02 - Shipping Addresses",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Shipping Addresses",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/shipping-addresses",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "shipping-addresses"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Shipping Address",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/shipping-addresses",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "shipping-addresses"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Customer\",\n    \"email\": \"customer@example.com\",\n    \"phone\": \"{{phone}}\",\n    \"delivery_area_id\": \"{{delivery_area_id}}\",\n    \"address\": \"House 10, Road 5, Dhaka\",\n    \"address_type\": \"home\",\n    \"is_default\": true,\n    \"postal_code\": \"1207\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                                    "    const json = pm.response.json();",
+                                    "    const id = json?.data?.id;",
+                                    "    if (id) pm.collectionVariables.set('shipping_address_id', id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Shipping Address",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/shipping-addresses/{{shipping_address_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "shipping-addresses",
+                                "{{shipping_address_id}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Shipping Address",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/shipping-addresses/{{shipping_address_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "shipping-addresses",
+                                "{{shipping_address_id}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Customer\",\n    \"email\": \"customer@example.com\",\n    \"phone\": \"{{phone}}\",\n    \"delivery_area_id\": \"{{delivery_area_id}}\",\n    \"address\": \"House 10, Road 5, Dhaka\",\n    \"address_type\": \"home\",\n    \"is_default\": true,\n    \"postal_code\": \"1207\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Set Default Shipping Address",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/shipping-addresses/{{shipping_address_id}}/default",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "shipping-addresses",
+                                "{{shipping_address_id}}",
+                                "default"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Shipping Address",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/shipping-addresses/{{shipping_address_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "shipping-addresses",
+                                "{{shipping_address_id}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "03 - Products & Categories",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/products?sort=popular&page=1&perPage=24",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "products"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "serum",
+                                    "description": "Search name/description",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "skincare",
+                                    "description": "Category id/slug/name",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "sub",
+                                    "value": "",
+                                    "description": "Subcategory id/slug/name",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "vendor",
+                                    "value": "",
+                                    "description": "Brand/vendor id/slug/name",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "popular",
+                                    "description": "popular, new, price-asc, price-desc, rating, discount"
+                                },
+                                {
+                                    "key": "rating",
+                                    "value": "4",
+                                    "description": "Minimum rating",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "min",
+                                    "value": "100",
+                                    "description": "Minimum price",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "max",
+                                    "value": "5000",
+                                    "description": "Maximum price",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page number"
+                                },
+                                {
+                                    "key": "perPage",
+                                    "value": "24",
+                                    "description": "12-48 items"
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Product (ID or Slug)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/products/{{product_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "products",
+                                "{{product_id}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ],
+                            "query": [
+                                {
+                                    "key": "featured",
+                                    "value": "1",
+                                    "description": "Only featured categories",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "popular",
+                                    "value": "1",
+                                    "description": "Only popular categories",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "flat",
+                                    "value": "1",
+                                    "description": "Return a flat list",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "parent_id",
+                                    "value": "{{category_id}}",
+                                    "description": "Used with flat=1",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Category (ID or Slug)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/categories/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "04 - Storefront Content",
+            "description": "",
+            "item": [
+                {
+                    "name": "Home Page",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/home",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "home"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Flash Sale Page",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/home/flash-sale",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "home",
+                                "flash-sale"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Flash Sale (ID or Slug)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/home/flash-sale/{{flash_sale_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "home",
+                                "flash-sale",
+                                "{{flash_sale_id}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Sliders",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/sliders",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "sliders"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Settings",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/settings",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "settings"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delivery Areas",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/delivery-areas",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "delivery-areas"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "Dhaka",
+                                    "description": "Search name, district, or tags",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Blogs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs?page=1&perPage=24",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "skin",
+                                    "description": "Search title/description",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "beauty",
+                                    "description": "Blog category id/slug/name",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page number"
+                                },
+                                {
+                                    "key": "perPage",
+                                    "value": "24",
+                                    "description": "6-48 items"
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Blog (Slug or ID)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/{{blog_slug}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "{{blog_slug}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Custom Pages",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/custom-pages",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "custom-pages"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Custom Page",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/custom-pages/{{custom_page_slug}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "custom-pages",
+                                "{{custom_page_slug}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "05 - Checkout",
+            "description": "",
+            "item": [
+                {
+                    "name": "Delivery Charges",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/checkout/delivery-charges",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "checkout",
+                                "delivery-charges"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Preview Checkout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/checkout/preview",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "checkout",
+                                "preview"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"shipping_address_id\": \"{{shipping_address_id}}\",\n    \"coupon_code\": \"{{coupon_code}}\",\n    \"items\": [\n        {\n            \"product_id\": \"{{product_id}}\",\n            \"product_variant_id\": \"{{variant_id}}\",\n            \"variant_name\": \"Default\",\n            \"quantity\": 1\n        }\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Apply Coupon",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/checkout/coupon/apply",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "checkout",
+                                "coupon",
+                                "apply"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"code\": \"{{coupon_code}}\",\n    \"shipping_address_id\": \"{{shipping_address_id}}\",\n    \"items\": [\n        {\n            \"product_id\": \"{{product_id}}\",\n            \"product_variant_id\": \"{{variant_id}}\",\n            \"variant_name\": \"Default\",\n            \"quantity\": 1\n        }\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove Coupon",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/checkout/coupon/remove",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "checkout",
+                                "coupon",
+                                "remove"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"shipping_address_id\": \"{{shipping_address_id}}\",\n    \"items\": [\n        {\n            \"product_id\": \"{{product_id}}\",\n            \"product_variant_id\": \"{{variant_id}}\",\n            \"variant_name\": \"Default\",\n            \"quantity\": 1\n        }\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Place Authenticated Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/checkout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "checkout"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"shipping_address_id\": \"{{shipping_address_id}}\",\n    \"items\": [\n        {\n            \"product_id\": \"{{product_id}}\",\n            \"product_variant_id\": \"{{variant_id}}\",\n            \"variant_name\": \"Default\",\n            \"quantity\": 1\n        }\n    ],\n    \"payment_method\": \"cash_on_delivery\",\n    \"order_notes\": \"Postman test order\",\n    \"coupon_code\": null\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                                    "    const json = pm.response.json();",
+                                    "    const orderNumber = json?.data?.order_number;",
+                                    "    if (orderNumber) pm.collectionVariables.set('order_number', orderNumber);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "06 - Orders",
+            "description": "",
+            "item": [
+                {
+                    "name": "Track Order (Public)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/orders/track",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "track"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"order_number\": \"{{order_number}}\",\n    \"phone\": \"{{phone}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List My Orders",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/orders?per_page=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "1-50 items"
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Order",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/orders/{{order_number}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "{{order_number}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Order Invoice (HTML)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/orders/{{order_number}}/invoice",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "{{order_number}}",
+                                "invoice"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "07 - Wishlist",
+            "description": "",
+            "item": [
+                {
+                    "name": "List Wishlist",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/wishlist",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wishlist"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add to Wishlist",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/wishlist",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wishlist"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": \"{{product_id}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Toggle Wishlist",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/wishlist/toggle",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wishlist",
+                                "toggle"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": \"{{product_id}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove from Wishlist",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/wishlist/{{product_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wishlist",
+                                "{{product_id}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "08 - Promo Checkout",
+            "description": "",
+            "item": [
+                {
+                    "name": "Get Promotion Page",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/promo/{{promo_slug}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "promo",
+                                "{{promo_slug}}"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Promo Product Variants",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/promo/product/{{product_id}}/variants",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "promo",
+                                "product",
+                                "{{product_id}}",
+                                "variants"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Product by Variant",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/promo/product/{{product_id}}/by-variant",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "promo",
+                                "product",
+                                "{{product_id}}",
+                                "by-variant"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"variant_id\": \"{{variant_id}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Promo Delivery Areas",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/promo/divisions/all",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "promo",
+                                "divisions",
+                                "all"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Send Promo Checkout OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/promo/checkout/send-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "promo",
+                                "checkout",
+                                "send-otp"
+                            ]
+                        },
+                        "description": "Session-based. Run Setup/Get CSRF Cookie first and keep Postman cookies enabled.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Promo Checkout OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/promo/checkout/verify-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "promo",
+                                "checkout",
+                                "verify-otp"
+                            ]
+                        },
+                        "description": "Must use the same Postman cookie jar/session as Send Promo Checkout OTP.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\",\n    \"otp_code\": \"{{promo_otp}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Place Promo Guest Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/promo/checkout/place-order",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "promo",
+                                "checkout",
+                                "place-order"
+                            ]
+                        },
+                        "description": "Requires a verified promo OTP in the same session.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": \"{{product_id}}\",\n    \"variant_id\": \"{{variant_id}}\",\n    \"quantity\": 1,\n    \"price\": 1000,\n    \"customer_name\": \"Promo Customer\",\n    \"customer_email\": \"promo@example.com\",\n    \"customer_phone\": \"{{phone}}\",\n    \"shipping_address\": \"House 10, Road 5, Dhaka\",\n    \"shipping_delivery_area_id\": \"{{delivery_area_id}}\",\n    \"shipping_postal_code\": \"1207\",\n    \"shipping_address_type\": \"home\",\n    \"payment_method\": \"cash_on_delivery\",\n    \"shipping_method\": \"flat_rate\",\n    \"shipping_cost\": 80,\n    \"delivery_area\": \"inside_dhaka\",\n    \"tax\": 0,\n    \"discount\": 0,\n    \"order_notes\": \"Promo Postman test order\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "09 - AI",
+            "description": "",
+            "item": [
+                {
+                    "name": "Image Search Instructions",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/ai/image-search",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "image-search"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Analyze Product Image",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ai/image-search",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "image-search"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"image\": \"data:image/jpeg;base64,PASTE_BASE64_IMAGE_HERE\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Transcription Instructions",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/ai/transcribe",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "transcribe"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Transcribe Audio",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ai/transcribe",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "transcribe"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"audio\": \"data:audio/webm;base64,PASTE_BASE64_AUDIO_HERE\",\n    \"mime\": \"audio/webm\",\n    \"lang\": \"en\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Load AI Conversation",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/ai/chat?channel=website&external_sender_id=%7B%7Bexternal_sender_id%7D%7D",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "chat"
+                            ],
+                            "query": [
+                                {
+                                    "key": "channel",
+                                    "value": "website",
+                                    "description": "facebook, instagram, whatsapp, telegram, website"
+                                },
+                                {
+                                    "key": "external_sender_id",
+                                    "value": "{{external_sender_id}}",
+                                    "description": "Conversation identity"
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Send AI Conversation Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ai/chat",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "chat"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"channel\": \"website\",\n    \"external_sender_id\": \"{{external_sender_id}}\",\n    \"messages\": {\n        \"role\": \"user\",\n        \"message\": \"What products do you recommend?\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "10 - Contact & Chat",
+            "description": "",
+            "item": [
+                {
+                    "name": "Send Contact Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/contact",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "contact"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Test Customer\",\n    \"email\": \"customer@example.com\",\n    \"phone\": \"{{phone}}\",\n    \"subject\": \"Product question\",\n    \"message\": \"Please tell me more about this product.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Send Simple Chat Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/chat",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "chat"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"message\": \"আমার অর্ডারটি কোথায়?\",\n    \"history\": [\n        {\n            \"role\": \"user\",\n            \"message\": \"Hello\"\n        }\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "11 - Webhooks",
+            "description": "",
+            "item": [
+                {
+                    "name": "Steadfast Webhook",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-Steadfast-Webhook-Secret",
+                                "value": "{{steadfast_webhook_secret}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/steadfast/webhook",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "steadfast",
+                                "webhook"
+                            ]
+                        },
+                        "description": "Status: pending, delivered, partial_delivered, cancelled, or unknown. Secret header is only required when configured server-side.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"notification_type\": \"delivery_status\",\n    \"consignment_id\": 123456,\n    \"invoice\": \"{{order_number}}\",\n    \"tracking_message\": \"Parcel delivered\",\n    \"updated_at\": \"2026-08-29 12:00:00\",\n    \"cod_amount\": 1000,\n    \"status\": \"delivered\",\n    \"delivery_charge\": 80\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}
