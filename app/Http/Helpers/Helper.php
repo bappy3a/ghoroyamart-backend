@@ -44,14 +44,28 @@ if (! function_exists('active_customer_menu')) {
 
 if (! function_exists('upload_webp_image')) {
     /**
-     * Store an optimized image on the default filesystem disk.
+     * Store an optimized image in public/uploads.
      *
      * WebP is preferred, but the original encoding is kept when it is smaller.
      */
     function upload_webp_image(UploadedFile $file, string $relativePath = 'uploads', int $quality = 80, bool $watermark = false): string
     {
-        $diskName = (string) config('filesystems.default');
-        $relativePath = trim($relativePath, '/');
+        $relativePath = trim(str_replace('\\', '/', $relativePath), '/');
+
+        if ($relativePath === '') {
+            $relativePath = 'uploads';
+        }
+
+        $pathSegments = explode('/', $relativePath);
+
+        if (in_array('..', $pathSegments, true) || in_array('.', $pathSegments, true)) {
+            throw new InvalidArgumentException('The upload folder contains an invalid path segment.');
+        }
+
+        if ($relativePath !== 'uploads' && ! str_starts_with($relativePath, 'uploads/')) {
+            $relativePath = 'uploads/'.$relativePath;
+        }
+
         $temporaryPath = tempnam(sys_get_temp_dir(), 'agonito_webp_');
 
         if ($temporaryPath === false) {
@@ -64,7 +78,6 @@ if (! function_exists('upload_webp_image')) {
             $currentQuality = min(75, max(1, $quality));
             $minimumQuality = min(55, $currentQuality);
             $extension = 'webp';
-            $contentType = 'image/webp';
             $image = Image::load($sourcePath);
 
             if ($image->image() instanceof Imagick) {
@@ -74,13 +87,6 @@ if (! function_exists('upload_webp_image')) {
                     $frame->setOption('webp:use-sharp-yuv', 'true');
                 }
             }
-
-            // if ($watermark) {
-            //     $watermarkPath = public_path('images/watermark_new.png');
-            //     if (File::exists($watermarkPath)) {
-            //         $image->watermark($watermarkPath, AlignPosition::Center);
-            //     }
-            // }
 
             do {
                 $image->format('webp')
@@ -99,10 +105,10 @@ if (! function_exists('upload_webp_image')) {
 
             if ($convertedSize >= $sourceSize) {
                 $sourceFormat = match ($file->getMimeType()) {
-                    'image/jpeg' => ['jpg', 'image/jpeg'],
-                    'image/png' => ['png', 'image/png'],
-                    'image/gif' => ['gif', 'image/gif'],
-                    'image/webp' => ['webp', 'image/webp'],
+                    'image/jpeg' => 'jpg',
+                    'image/png' => 'png',
+                    'image/gif' => 'gif',
+                    'image/webp' => 'webp',
                     default => null,
                 };
 
@@ -111,30 +117,18 @@ if (! function_exists('upload_webp_image')) {
                         throw new RuntimeException('Unable to preserve the smaller source image.');
                     }
 
-                    [$extension, $contentType] = $sourceFormat;
+                    $extension = $sourceFormat;
                 }
             }
 
             $filename = Str::uuid()->toString().'.'.$extension;
             $storagePath = ($relativePath !== '' ? $relativePath.'/' : '').$filename;
 
-            $stream = fopen($temporaryPath, 'rb');
-            if ($stream === false) {
-                throw new RuntimeException('Unable to read the converted image.');
-            }
+            $publicDirectory = public_path($relativePath);
+            File::ensureDirectoryExists($publicDirectory);
 
-            try {
-                $disk = Storage::disk($diskName);
-                $stored = $disk->put($storagePath, $stream, [
-                    'ContentType' => $contentType,
-                    'CacheControl' => 'public, max-age=31536000, immutable',
-                ]);
-            } finally {
-                fclose($stream);
-            }
-
-            if (! $stored) {
-                throw new RuntimeException("Unable to store image on the [{$diskName}] disk.");
+            if (! File::copy($temporaryPath, $publicDirectory.DIRECTORY_SEPARATOR.$filename)) {
+                throw new RuntimeException("Unable to store image in [{$publicDirectory}].");
             }
 
             return $storagePath;
@@ -236,7 +230,7 @@ if (! function_exists('rewrite_api_assets_in_html')) {
 
 if (! function_exists('delete_uploaded_file')) {
     /**
-     * Delete an image created by upload_webp_image from cloud or legacy local storage.
+     * Delete an image created by upload_webp_image from public storage.
      */
     function delete_uploaded_file(?string $location): bool
     {
@@ -246,21 +240,9 @@ if (! function_exists('delete_uploaded_file')) {
             return false;
         }
 
-        $diskName = (string) config('filesystems.default');
-        $diskConfig = config("filesystems.disks.{$diskName}", []);
-        $deleted = false;
-
-        if (($diskConfig['driver'] ?? null) !== 'local') {
-            $deleted = Storage::disk($diskName)->delete($path);
-        }
-
         $absolutePath = public_path($path);
 
-        if (is_file($absolutePath)) {
-            $deleted = File::delete($absolutePath) || $deleted;
-        }
-
-        return $deleted;
+        return is_file($absolutePath) && File::delete($absolutePath);
     }
 }
 // flash message
@@ -565,7 +547,7 @@ if (! function_exists('api_asset')) {
             return null;
         }
 
-        return local_asset($url);
+        return asset($url);
     }
 }
 

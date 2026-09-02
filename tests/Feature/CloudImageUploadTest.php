@@ -26,10 +26,12 @@ class CloudImageUploadTest extends TestCase
         $url = upload_webp_image($file, 'uploads/settings', 80);
         $path = $url;
 
-        $disk->assertExists($path);
-        $this->assertSame($sourceSize, $disk->size($path));
+        $disk->assertMissing($path);
+        $this->assertFileExists(public_path($path));
+        $this->assertSame($sourceSize, File::size(public_path($path)));
         $this->assertSame('png', pathinfo($path, PATHINFO_EXTENSION));
-        $this->assertSame('image/png', $disk->mimeType($path));
+        $this->assertSame('image/png', File::mimeType(public_path($path)));
+        $this->assertTrue(delete_uploaded_file($path));
     }
 
     public function test_an_already_compressed_image_does_not_grow_during_optimization(): void
@@ -49,12 +51,14 @@ class CloudImageUploadTest extends TestCase
         $url = upload_webp_image($file, 'uploads/products', 80);
         $path = $url;
 
-        $disk->assertExists($path);
-        $this->assertLessThan($sourceSize, $disk->size($path));
+        $disk->assertMissing($path);
+        $this->assertFileExists(public_path($path));
+        $this->assertLessThan($sourceSize, File::size(public_path($path)));
         $this->assertSame('webp', pathinfo($path, PATHINFO_EXTENSION));
+        $this->assertTrue(delete_uploaded_file($path));
     }
 
-    public function test_webp_images_are_uploaded_and_deleted_using_the_configured_disk(): void
+    public function test_webp_images_are_uploaded_to_the_selected_public_folder_without_using_s3(): void
     {
         config([
             'filesystems.default' => 's3',
@@ -67,25 +71,27 @@ class CloudImageUploadTest extends TestCase
         $disk = Storage::fake('s3', ['url' => 'https://cdn.example.test/agonito']);
         $path = upload_webp_image(
             UploadedFile::fake()->image('product.jpg', 120, 120),
-            'uploads/products',
+            'products',
         );
 
         $this->assertMatchesRegularExpression(
             '#^uploads/products/[0-9a-f-]+\.webp$#',
             $path,
         );
-        $disk->assertExists($path);
-        $this->assertSame('image/webp', $disk->mimeType($path));
+        $disk->assertMissing($path);
+        $this->assertFileExists(public_path($path));
+        $this->assertSame('image/webp', File::mimeType(public_path($path)));
         $this->assertSame(
-            'https://cdn.example.test/agonito/'.$path,
+            asset($path),
             api_asset($path),
         );
 
         $this->assertTrue(delete_uploaded_file($path));
         $disk->assertMissing($path);
+        $this->assertFileDoesNotExist(public_path($path));
     }
 
-    public function test_api_asset_uses_the_cloud_url_even_when_a_local_copy_exists(): void
+    public function test_api_asset_uses_local_urls_for_relative_public_paths(): void
     {
         config([
             'app.url' => 'http://agonito.test',
@@ -105,17 +111,18 @@ class CloudImageUploadTest extends TestCase
 
         try {
             $cloudUrl = 'https://cdn.example.test/agonito/'.$path;
+            $localUrl = asset($path);
 
-            $this->assertSame($cloudUrl, api_asset($path));
-            $this->assertSame($cloudUrl, api_asset('/'.$path));
-            $this->assertSame($cloudUrl, api_asset('http://agonito.test/'.$path));
-            $this->assertSame($cloudUrl, api_asset('http://127.0.0.1:8000/'.$path));
-            $this->assertSame($cloudUrl, api_asset('https://agonito.store/'.$path));
-            $this->assertSame('Watch', api_asset('Watch'));
-            $this->assertSame('BedDouble', api_asset('BedDouble'));
+            $this->assertSame($localUrl, api_asset($path));
+            $this->assertSame($localUrl, api_asset('/'.$path));
+            $this->assertSame('http://agonito.test/'.$path, api_asset('http://agonito.test/'.$path));
+            $this->assertSame('http://127.0.0.1:8000/'.$path, api_asset('http://127.0.0.1:8000/'.$path));
+            $this->assertSame('https://agonito.store/'.$path, api_asset('https://agonito.store/'.$path));
+            $this->assertSame(asset('Watch'), api_asset('Watch'));
+            $this->assertSame(asset('BedDouble'), api_asset('BedDouble'));
             $this->assertSame($cloudUrl, api_asset('https://cdn.example.test/agonito/'.$path));
             $this->assertSame(
-                '<p><img src="'.$cloudUrl.'" alt="Banner"></p>',
+                '<p><img src="http://agonito.test/'.$path.'" alt="Banner"></p>',
                 rewrite_api_assets_in_html('<p><img src="http://agonito.test/'.$path.'" alt="Banner"></p>'),
             );
             $this->assertSame(
@@ -127,7 +134,7 @@ class CloudImageUploadTest extends TestCase
         }
     }
 
-    public function test_api_asset_uses_s3_even_when_the_default_disk_is_local(): void
+    public function test_api_asset_does_not_rewrite_paths_to_s3(): void
     {
         config([
             'app.url' => 'https://agonito.store',
@@ -143,11 +150,11 @@ class CloudImageUploadTest extends TestCase
         $path = 'uploads/products/live-product.webp';
 
         $this->assertSame(
-            'https://cdn.example.test/agonito/'.$path,
+            asset($path),
             api_asset($path),
         );
         $this->assertSame(
-            'https://cdn.example.test/agonito/'.$path,
+            'https://agonito.store/'.$path,
             api_asset('https://agonito.store/'.$path),
         );
     }
