@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Api\HomeController;
 use App\Models\Product;
+use App\Models\Setting;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -73,5 +74,67 @@ class ApiHomeQueryTest extends TestCase
 
         $this->assertSame([$featured->id], collect($trendingProducts)->pluck('id')->all());
         $this->assertTrue(collect($trendingProducts)->every('is_featured'));
+    }
+
+    public function test_configured_price_deals_return_at_most_eight_eligible_products(): void
+    {
+        Cache::flush();
+
+        Setting::query()->create([
+            'key' => 'home_deal_section_items',
+            'value' => json_encode([
+                [
+                    'title' => 'Everything from 1 to 99 Tk',
+                    'min_price' => 1,
+                    'max_price' => 99,
+                    'banner_image' => 'uploads/settings/home/deal.webp',
+                ],
+            ]),
+            'group' => 'Home Page',
+            'type' => 'textarea',
+            'label' => 'Home Deal Section Items',
+        ]);
+
+        foreach (range(1, 10) as $number) {
+            Product::query()->create([
+                'name' => "Eligible deal product {$number}",
+                'slug' => "eligible-deal-product-{$number}",
+                'price' => 99,
+                'num_of_sale' => $number,
+            ]);
+        }
+
+        Product::query()->create([
+            'name' => 'Below minimum price',
+            'slug' => 'below-minimum-price-for-deal',
+            'price' => 0.50,
+            'num_of_sale' => 101,
+        ]);
+
+        Product::query()->create([
+            'name' => 'Too expensive',
+            'slug' => 'too-expensive-for-deal',
+            'price' => 100,
+            'num_of_sale' => 100,
+        ]);
+
+        $response = $this->getJson(route('api.home.index'))
+            ->assertOk()
+            ->assertJsonPath('data.deals.0.title', 'Everything from 1 to 99 Tk')
+            ->assertJsonPath('data.deals.0.min_price', 1)
+            ->assertJsonPath('data.deals.0.max_price', 99)
+            ->assertJsonCount(8, 'data.deals.0.products');
+
+        $payloadKeys = array_keys($response->json('data'));
+        $this->assertSame(
+            array_search('flash_sale', $payloadKeys, true) + 1,
+            array_search('deals', $payloadKeys, true)
+        );
+
+        $this->assertTrue(
+            collect($response->json('data.deals.0.products'))->every(
+                fn (array $product) => $product['price'] >= 1 && $product['price'] <= 99
+            )
+        );
     }
 }

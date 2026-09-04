@@ -33,6 +33,7 @@ class HomePageSettingController extends Controller
             'home_shopping_category_id' => '',
             'home_shopping_products_limit' => '8',
             'home_shopping_section_items' => [],
+            'home_deal_section_items' => [],
             'home_top_selling_title' => 'Top selling Categories This Week',
             'home_video_link' => '',
             'home_video_banner' => '',
@@ -55,6 +56,18 @@ class HomePageSettingController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        $dealRowsInput = $request->input('deal_section_items', []);
+        foreach ($dealRowsInput as &$dealRowInput) {
+            $minimumPriceMissing = ! array_key_exists('min_price', $dealRowInput)
+                || $dealRowInput['min_price'] === null
+                || $dealRowInput['min_price'] === '';
+            if (! empty($dealRowInput['max_price']) && $minimumPriceMissing) {
+                $dealRowInput['min_price'] = 1;
+            }
+        }
+        unset($dealRowInput);
+        $request->merge(['deal_section_items' => $dealRowsInput]);
+
         $data = $request->validate([
             'home_slider_count' => ['nullable', 'integer', 'min:1', 'max:30'],
             'home_popular_categories_count' => ['nullable', 'integer', 'min:1', 'max:30'],
@@ -114,6 +127,14 @@ class HomePageSettingController extends Controller
             'shopping_section_items.*.existing_image' => ['nullable', 'string'],
             'shopping_section_item_images' => ['nullable', 'array'],
             'shopping_section_item_images.*' => ['nullable', 'image', 'max:2048'],
+
+            'deal_section_items' => ['nullable', 'array'],
+            'deal_section_items.*.title' => ['nullable', 'string', 'max:255'],
+            'deal_section_items.*.min_price' => ['nullable', 'required_with:deal_section_items.*.max_price', 'numeric', 'min:0'],
+            'deal_section_items.*.max_price' => ['nullable', 'required_with:deal_section_items.*.title,deal_section_items.*.min_price,deal_section_items.*.existing_image,deal_section_item_images.*', 'numeric', 'gt:deal_section_items.*.min_price'],
+            'deal_section_items.*.existing_image' => ['nullable', 'string'],
+            'deal_section_item_images' => ['nullable', 'array'],
+            'deal_section_item_images.*' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $fields = [
@@ -217,7 +238,7 @@ class HomePageSettingController extends Controller
         $instagramImages = [];
         $existingInstagram = $data['home_instagram_existing'] ?? [];
         foreach ($existingInstagram as $img) {
-            if (!empty($img)) {
+            if (! empty($img)) {
                 $instagramImages[] = $img;
             }
         }
@@ -288,6 +309,46 @@ class HomePageSettingController extends Controller
             ]
         );
 
+        $dealSectionItems = [];
+        $dealRows = $data['deal_section_items'] ?? [];
+        foreach ($dealRows as $index => $row) {
+            $imagePath = $row['existing_image'] ?? '';
+            if ($request->hasFile("deal_section_item_images.{$index}")) {
+                delete_uploaded_file($imagePath);
+                $imagePath = upload_webp_image($request->file("deal_section_item_images.{$index}"), 'uploads/settings/home', 80);
+            }
+
+            if (empty($row['title']) && empty($row['min_price']) && empty($row['max_price']) && empty($imagePath)) {
+                continue;
+            }
+
+            $dealSectionItems[] = [
+                'title' => trim((string) ($row['title'] ?? '')),
+                'min_price' => (float) ($row['min_price'] ?? 1),
+                'max_price' => (float) ($row['max_price'] ?? 0),
+                'banner_image' => $imagePath,
+            ];
+        }
+
+        $storedDealImages = collect(json_decode(Setting::get('home_deal_section_items', '[]'), true) ?: [])
+            ->pluck('banner_image')
+            ->filter();
+        $keptDealImages = collect($dealSectionItems)->pluck('banner_image')->filter();
+        foreach ($storedDealImages->diff($keptDealImages) as $removedImage) {
+            delete_uploaded_file($removedImage);
+        }
+
+        Setting::updateOrCreate(
+            ['key' => 'home_deal_section_items'],
+            [
+                'value' => json_encode($dealSectionItems),
+                'group' => 'Home Page',
+                'type' => 'textarea',
+                'label' => 'Home Deal Section Items',
+                'description' => 'Price-based homepage deal sections with banners',
+            ]
+        );
+
         Setting::clearCache();
         ApiHomeController::clearCache();
         flash_message('Home page settings updated successfully!');
@@ -315,6 +376,7 @@ class HomePageSettingController extends Controller
             'home_shopping_category_id' => Setting::get('home_shopping_category_id', ''),
             'home_shopping_products_limit' => Setting::get('home_shopping_products_limit', '8'),
             'home_shopping_section_items' => json_decode(Setting::get('home_shopping_section_items', '[]'), true) ?: [],
+            'home_deal_section_items' => json_decode(Setting::get('home_deal_section_items', '[]'), true) ?: [],
             'home_top_selling_title' => Setting::get('home_top_selling_title', 'Top selling Categories This Week'),
             'home_video_link' => Setting::get('home_video_link', 'https://youtu.be/cNOKQIw81SE?si=iwUyBvpTD3h8DpFK'),
             'home_video_banner' => Setting::get('home_video_banner', ''),

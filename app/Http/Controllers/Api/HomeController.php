@@ -23,7 +23,7 @@ class HomeController extends Controller
 
     private const CACHE_KEY = 'api.home';
 
-    private const CACHE_TTL_MINUTES = 720; // 12 hours
+    private const CACHE_TTL_MINUTES = 0; // 12 hours
 
     /** @var array<string, mixed> */
     private array $settings = [];
@@ -70,18 +70,13 @@ class HomeController extends Controller
         );
 
         return [
-            // Hero 3-column layout: featured categories | slider | flash sale tile
-            'hero' => [
-                'featured_categories' => $this->featuredCategories(11),
-                'sliders' => $sliders,
-                'flash_sale' => $this->flashSalePreview($flashSale),
-            ],
             'sliders' => $sliders,
             'popular_categories' => [
                 'title' => $this->setting('home_popular_categories_title', 'Popular Categories'),
                 'items' => $this->popularCategories($counts['popular_categories']),
             ],
             'flash_sale' => $flashSale,
+            'deals' => $this->dealSections(),
             'recommended' => $this->productsBy('popular', 18),
             'rails' => $this->rails($counts),
             'brands' => $this->brands($counts['brands']),
@@ -93,7 +88,7 @@ class HomeController extends Controller
             ],
             // Matches CategorySection in page.tsx (banner + product rail)
             'shopping_sections' => $this->shoppingSections($sectionData['shopping_items'], $sectionData['categories'], $sectionData['children_by_parent']),
-            'category_banners' => $this->categoryBanners($sectionData['banner_items'], $sectionData['categories'], $sectionData['children_by_parent']),
+            // 'category_banners' => $this->categoryBanners($sectionData['banner_items'], $sectionData['categories'], $sectionData['children_by_parent']),
             'trending_banner' => [
                 'image' => $this->assetOrNull($this->setting('home_trending_banner_image', '')),
                 'subtitle' => $this->setting('home_trending_banner_subtitle', ''),
@@ -101,23 +96,16 @@ class HomeController extends Controller
                 'link' => $this->setting('home_trending_banner_link', '#'),
                 'link_text' => $this->setting('home_trending_banner_link_text', 'Collection'),
             ],
-            'video' => [
-                'link' => $this->setting('home_video_link', ''),
-                'banner' => $this->assetOrNull($this->setting('home_video_banner', '')),
-                'text' => $this->setting('home_video_banner_text', ''),
-            ],
             'reviews' => [
                 'subtitle' => $this->setting('home_product_review_subtitle', ''),
                 'title' => $this->setting('home_product_review_title', ''),
                 'description' => $this->setting('home_product_review_description', ''),
             ],
-            'instagram' => $this->instagramImages(),
             'blogs' => $this->blogs(6),
             'featured_section' => [
                 'subtitle' => $this->setting('home_featured_section_subtitle', 'Summer collection'),
                 'title' => $this->setting('home_featured_section_title', 'Shopping Every Day'),
-            ],
-            'top_selling_title' => $this->setting('home_top_selling_title', 'Top selling Categories This Week'),
+            ]
         ];
     }
 
@@ -319,6 +307,40 @@ class HomeController extends Controller
             ->all();
     }
 
+    private function dealSections(): array
+    {
+        $items = json_decode($this->setting('home_deal_section_items', '[]'), true) ?: [];
+
+        return collect($items)
+            ->filter(fn ($item) => (float) ($item['max_price'] ?? 0) > 0)
+            ->map(function (array $item) {
+                $minPrice = max(0, (float) ($item['min_price'] ?? 0));
+                $maxPrice = (float) $item['max_price'];
+                $title = trim((string) ($item['title'] ?? ''))
+                    ?: 'Deals ৳'.number_format($minPrice, 0).' - ৳'.number_format($maxPrice, 0);
+                $products = $this->storefrontQuery()
+                    ->with(['category.parent', 'brand'])
+                    ->whereBetween('price', [$minPrice, $maxPrice])
+                    ->orderByDesc('num_of_sale')
+                    ->orderByDesc('id')
+                    ->limit(8)
+                    ->get();
+
+                return [
+                    'title' => $title,
+                    'min_price' => $minPrice,
+                    'max_price' => $maxPrice,
+                    'banner_image' => $this->assetOrNull($item['banner_image'] ?? ''),
+                    'products' => (new ProductsCollection($products))->resolve(),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Legacy single budget rail retained for existing API consumers.
+     */
     private function dealsUnder(float $maxPrice, int $limit): array
     {
         $products = $this->storefrontQuery()

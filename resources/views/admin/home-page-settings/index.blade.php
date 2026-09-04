@@ -41,6 +41,9 @@
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-shopping" type="button" role="tab">Shopping Section</button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-deals" type="button" role="tab">Deals</button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-video" type="button" role="tab">Video & Trending</button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -97,6 +100,15 @@
                 </div>
                 <p class="text-muted mb-3">Each item: banner image, title, category, and products limit.</p>
                 <div id="shopping-items-wrapper" class="d-flex flex-column gap-3"></div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-deals" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Price Deals - Multiple Items</h5>
+                    <button type="button" id="add-deal-item" class="btn btn-primary btn-sm">+ Add Deal</button>
+                </div>
+                <p class="text-muted mb-3">Set a title, minimum and maximum price, and banner. For example, 1 Tk to 99 Tk. Each deal shows up to 8 matching products.</p>
+                <div id="deal-items-wrapper" class="d-flex flex-column gap-3"></div>
             </div>
 
             <div class="tab-pane fade" id="tab-video" role="tabpanel">
@@ -178,6 +190,7 @@
 @php
     $homePageImageUrls = collect($settings['home_category_banners'] ?? [])
         ->concat($settings['home_shopping_section_items'] ?? [])
+        ->concat($settings['home_deal_section_items'] ?? [])
         ->pluck('banner_image')
         ->filter()
         ->unique()
@@ -188,12 +201,15 @@
         const categories = @json($categories);
         const existingBanners = @json($settings['home_category_banners'] ?? []);
         const existingShoppingItems = @json($settings['home_shopping_section_items'] ?? []);
+        const existingDealItems = @json($settings['home_deal_section_items'] ?? []);
         const imageUrls = @json($homePageImageUrls);
         const imageUrlTemplate = @json(api_asset('__API_ASSET_PATH__'));
         const wrapper = document.getElementById('category-banners-wrapper');
         const addButton = document.getElementById('add-category-banner');
         const shoppingWrapper = document.getElementById('shopping-items-wrapper');
         const addShoppingButton = document.getElementById('add-shopping-item');
+        const dealWrapper = document.getElementById('deal-items-wrapper');
+        const addDealButton = document.getElementById('add-deal-item');
         const deleteHomeGalleryImageModalElement = document.getElementById('deleteHomeGalleryImageModal');
         const deleteHomeGalleryImageModal = deleteHomeGalleryImageModalElement ? new bootstrap.Modal(deleteHomeGalleryImageModalElement) : null;
         let pendingHomeGalleryImage = null;
@@ -375,6 +391,67 @@
             existingShoppingItems.forEach((item, i) => shoppingWrapper.appendChild(shoppingRow(i, item)));
         } else {
             shoppingWrapper.appendChild(shoppingRow(0));
+        }
+
+        function dealRow(index, data = {}) {
+            const card = document.createElement('div');
+            card.className = 'card border';
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Deal #${index + 1}</h6>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-deal-item">Remove</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Deal Title</label>
+                            <input type="text" class="form-control" name="deal_section_items[${index}][title]" value="${data.title || ''}" placeholder="e.g. 1 to 99 Tk Deals">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Minimum Price (Tk)</label>
+                            <input type="number" min="0" step="0.01" class="form-control" name="deal_section_items[${index}][min_price]" value="${data.min_price ?? ''}" placeholder="1">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Maximum Price (Tk)</label>
+                            <input type="number" min="0.01" step="0.01" class="form-control" name="deal_section_items[${index}][max_price]" value="${data.max_price || ''}" placeholder="99">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Banner Image</label>
+                            <input type="file" class="form-control" name="deal_section_item_images[${index}]" accept="image/*">
+                            <input type="hidden" name="deal_section_items[${index}][existing_image]" value="${data.banner_image || ''}">
+                            ${data.banner_image ? `<img src="${resolveImageUrl(data.banner_image)}" class="img-thumbnail mt-2" style="max-height:80px;" alt="Deal Banner">` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            card.querySelector('.remove-deal-item').addEventListener('click', () => {
+                card.remove();
+                rebuildDealIndexes();
+            });
+
+            return card;
+        }
+
+        function rebuildDealIndexes() {
+            const data = Array.from(dealWrapper.querySelectorAll('.card')).map((card) => ({
+                title: card.querySelector('input[name*="[title]"]')?.value || '',
+                min_price: card.querySelector('input[name*="[min_price]"]')?.value || '',
+                max_price: card.querySelector('input[name*="[max_price]"]')?.value || '',
+                banner_image: card.querySelector('input[name*="[existing_image]"]')?.value || '',
+            }));
+            dealWrapper.innerHTML = '';
+            data.forEach((item, index) => dealWrapper.appendChild(dealRow(index, item)));
+        }
+
+        addDealButton.addEventListener('click', function () {
+            dealWrapper.appendChild(dealRow(dealWrapper.querySelectorAll('.card').length));
+        });
+
+        if (existingDealItems.length) {
+            existingDealItems.forEach((item, index) => dealWrapper.appendChild(dealRow(index, item)));
+        } else {
+            dealWrapper.appendChild(dealRow(0));
         }
     })();
 </script>
