@@ -88,7 +88,6 @@ class HomeController extends Controller
             ],
             // Matches CategorySection in page.tsx (banner + product rail)
             'shopping_sections' => $this->shoppingSections($sectionData['shopping_items'], $sectionData['categories'], $sectionData['children_by_parent']),
-            // 'category_banners' => $this->categoryBanners($sectionData['banner_items'], $sectionData['categories'], $sectionData['children_by_parent']),
             'trending_banner' => [
                 'image' => $this->assetOrNull($this->setting('home_trending_banner_image', '')),
                 'subtitle' => $this->setting('home_trending_banner_subtitle', ''),
