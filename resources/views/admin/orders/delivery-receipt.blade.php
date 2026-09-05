@@ -302,7 +302,7 @@
 @php
     $appName = config('app.name', 'Glamics');
     $configuredLogo = trim((string) setting('header_logo'));
-    $logoUrl = $configuredLogo !== '' ? api_asset($configuredLogo) : asset('logo.svg');
+    $logoUrl = invoice_logo_url();
 
     $shippingAddress = $order->shippingAddress;
     $shippingParts = array_filter([

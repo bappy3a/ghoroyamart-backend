@@ -556,6 +556,32 @@ if (! function_exists('api_asset')) {
     }
 }
 
+if (! function_exists('invoice_logo_url')) {
+    /**
+     * Self-contained invoice logo so it still renders in blob/print windows.
+     */
+    function invoice_logo_url(): string
+    {
+        $paths = [public_path('logo.png')];
+        $configured = trim((string) setting('header_logo'));
+
+        if ($configured !== '') {
+            $relative = ltrim((string) (parse_url($configured, PHP_URL_PATH) ?: $configured), '/');
+            $paths[] = public_path($relative);
+        }
+
+        foreach (array_unique($paths) as $path) {
+            if (is_file($path)) {
+                $mime = mime_content_type($path) ?: 'image/png';
+
+                return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($path));
+            }
+        }
+
+        return $configured !== '' ? (string) api_asset($configured) : asset('logo.png');
+    }
+}
+
 if (! function_exists('media_disk_name')) {
     /**
      * Disk used for uploaded media. Prefers the configured S3/cloud disk even

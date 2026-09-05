@@ -11,7 +11,7 @@ class SettingController extends Controller
     use ApiResponse;
 
     /**
-     * Public storefront settings (contact, social, footer, payments).
+     * Public storefront settings (menu, contact, social, footer, payments).
      */
     public function index()
     {
@@ -20,6 +20,7 @@ class SettingController extends Controller
         $paymentImages = json_decode($settings['payment_gateway_images'] ?? '[]', true) ?: [];
 
         return $this->success([
+            'menu' => frontend_menu_items(),
             'contact' => [
                 'phone' => $settings['contact_phone_1'] ?? null,
                 'email' => $settings['contact_email_1'] ?? null,
