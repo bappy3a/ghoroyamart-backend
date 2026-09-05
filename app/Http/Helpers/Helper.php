@@ -404,6 +404,11 @@ if (! function_exists('smsSend')) {
             throw new Exception('SMS rate limit exceeded for this IP address. Please try again after an hour.');
         }
 
+        if(config('app.env') === 'local') {
+            Log::info("SMS Send (Local Environment): To: {$mobileNo}, Message: {$message}");
+            return true;
+        }
+
         if ($code == '880') {
             return minsms($mobileNo, $message, $unicode);
         } elseif ($code == '88') {
