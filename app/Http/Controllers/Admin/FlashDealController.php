@@ -53,6 +53,14 @@ class FlashDealController extends Controller
             );
         }
 
+        if ($request->hasFile('featured_image')) {
+            $data['featured_image'] = upload_webp_image(
+                $request->file('featured_image'),
+                'uploads/flash-deals',
+                80
+            );
+        }
+
         // Generate slug if not provided
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['title']);
@@ -103,6 +111,16 @@ class FlashDealController extends Controller
             $data['banner_image'] = $newBannerImage;
         }
 
+        if ($request->hasFile('featured_image')) {
+            $newFeaturedImage = upload_webp_image(
+                $request->file('featured_image'),
+                'uploads/flash-deals',
+                80
+            );
+            delete_uploaded_file($flashDeal->featured_image);
+            $data['featured_image'] = $newFeaturedImage;
+        }
+
         // Generate slug if not provided
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['title']);
@@ -130,6 +148,7 @@ class FlashDealController extends Controller
     public function destroy(FlashDeal $flashDeal): RedirectResponse
     {
         delete_uploaded_file($flashDeal->banner_image);
+        delete_uploaded_file($flashDeal->featured_image);
 
         $flashDeal->delete();
         HomeController::clearCache();

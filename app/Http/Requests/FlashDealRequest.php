@@ -33,6 +33,7 @@ class FlashDealRequest extends FormRequest
             ],
             'description' => ['nullable', 'string'],
             'banner_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
+            'featured_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
             'background_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'text_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'start_date' => ['required', 'date'],
@@ -57,6 +58,7 @@ class FlashDealRequest extends FormRequest
             'product_ids.min' => 'Please select at least one product for the flash deal.',
             'discount_percentage.max' => 'Discount percentage cannot exceed 100%.',
             'banner_image.max' => 'Banner image size cannot exceed 2MB.',
+            'featured_image.max' => 'Featured image size cannot exceed 5MB.',
         ];
     }
 }

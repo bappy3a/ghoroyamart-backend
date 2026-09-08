@@ -101,6 +101,7 @@ class FlashSaleController extends Controller
             'title' => $deal->title,
             'description' => $deal->description,
             'banner_image' => $this->assetOrNull($deal->banner_image),
+            'featured_image' => $this->assetOrNull($deal->featured_image),
             'background_color' => $deal->background_color,
             'text_color' => $deal->text_color,
             'discount_percentage' => (float) $deal->discount_percentage,

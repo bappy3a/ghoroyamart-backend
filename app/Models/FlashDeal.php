@@ -16,6 +16,7 @@ class FlashDeal extends Model
         'slug',
         'description',
         'banner_image',
+        'featured_image',
         'background_color',
         'text_color',
         'start_date',
@@ -155,5 +156,13 @@ class FlashDeal extends Model
     public function getBannerImageUrlAttribute(): ?string
     {
         return $this->banner_image ? api_asset($this->banner_image) : null;
+    }
+
+    /**
+     * Get featured image URL
+     */
+    public function getFeaturedImageUrlAttribute(): ?string
+    {
+        return $this->featured_image ? api_asset($this->featured_image) : null;
     }
 }

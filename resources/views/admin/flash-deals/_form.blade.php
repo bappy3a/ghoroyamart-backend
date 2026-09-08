@@ -243,6 +243,44 @@
     <div class="col-xl-4">
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-transparent">
+                <h5 class="mb-0">Featured Image</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="featured_image" class="form-label">Upload image</label>
+                    <input
+                        type="file"
+                        class="form-control @error('featured_image') is-invalid @enderror"
+                        id="featured_image"
+                        name="featured_image"
+                        accept="image/*"
+                    >
+                    @error('featured_image')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">Max 5MB. Recommended: 1200×630px. Formats: JPG, PNG, GIF, WebP.</div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <div
+                        id="featured_image-preview-placeholder"
+                        class="{{ ($isEdit && $flashDeal->featured_image) ? 'd-none' : '' }} text-muted small"
+                    >
+                        No image selected
+                    </div>
+                    <img
+                        src="{{ ($isEdit && $flashDeal->featured_image) ? api_asset($flashDeal->featured_image) : '' }}"
+                        alt="Featured image preview"
+                        id="featured_image-preview-img"
+                        class="img-thumbnail {{ ($isEdit && $flashDeal->featured_image) ? '' : 'd-none' }}"
+                        style="max-height: 150px;"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent">
                 <h5 class="mb-0">Status</h5>
             </div>
             <div class="card-body">

@@ -30,6 +30,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Featured image preview
+    const featuredImageInput = document.getElementById('featured_image');
+    if (featuredImageInput) {
+        featuredImageInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('featured_image-preview-img');
+            const placeholder = document.getElementById('featured_image-preview-placeholder');
+
+            if (file && preview && placeholder) {
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    preview.src = ev.target.result;
+                    preview.classList.remove('d-none');
+                    placeholder.classList.add('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
     // Validate end date is after start date
     const startDateInput = document.getElementById('start_date');
     const endDateInput = document.getElementById('end_date');
