@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PermissionSeeder::class,
             AboutPageSettingSeeder::class,
+            CustomPageSeeder::class,
             UnitSeeder::class,
             SliderSeeder::class,
             CategorySeeder::class,
