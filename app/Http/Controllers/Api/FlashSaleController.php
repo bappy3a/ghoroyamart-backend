@@ -54,13 +54,11 @@ class FlashSaleController extends Controller
     /**
      * Single flash deal by slug or id, with products.
      */
-    public function show(string $id)
+    public function show(string $slug)
     {
         $query = FlashDeal::query()->where('is_active', true);
 
-        $deal = ctype_digit($id)
-            ? $query->where('id', (int) $id)->first()
-            : $query->where('slug', $id)->first();
+        $deal = $query->where('slug', $slug)->first();
 
         if (! $deal) {
             return $this->error('Flash sale not found', null, null, 404);

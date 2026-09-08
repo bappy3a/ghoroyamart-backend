@@ -9,5 +9,5 @@ Route::prefix('home')->name('api.home.')->group(function () {
 
     // Flash sale page — all live/upcoming rounds with products
     Route::get('/flash-sale', [FlashSaleController::class, 'index'])->name('flash-sale');
-    Route::get('/flash-sale/{id}', [FlashSaleController::class, 'show'])->name('flash-sale.show');
+    Route::get('/flash-sale/{slug}', [FlashSaleController::class, 'show'])->name('flash-sale.show');
 });
