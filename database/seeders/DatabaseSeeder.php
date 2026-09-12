@@ -17,12 +17,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::firstOrCreate(
-            ['email' => 'bappy@dev.local'],
+            ['email' => 'ghoroyamart@gmail.com'],
             [
-                'name' => 'Ahmed Bappy',
-                'username' => 'bappy',
-                'phone' => '01586363179',
-                'email' => 'bappy@dev.local',
+                'name' => 'Ghoroya Mart',
+                'username' => 'ghoroyamart',
+                'phone' => '00000000000',
+                'email' => 'ghoroyamart@gmail.com',
                 'user_type' => 'admin',
                 'status' => 'active',
                 'email_verified_at' => now(),
@@ -35,11 +35,11 @@ class DatabaseSeeder extends Seeder
             AboutPageSettingSeeder::class,
             CustomPageSeeder::class,
             UnitSeeder::class,
-            SliderSeeder::class,
-            CategorySeeder::class,
-            BedSheetProductSeeder::class,
-            KathaProductSeeder::class,
-            WatchProductSeeder::class,
+            //SliderSeeder::class,
+            //CategorySeeder::class,
+            //BedSheetProductSeeder::class,
+            //KathaProductSeeder::class,
+            //WatchProductSeeder::class,
             // ProductSeeder::class,
             DeliveryAreaSeeder::class,
         ]);
