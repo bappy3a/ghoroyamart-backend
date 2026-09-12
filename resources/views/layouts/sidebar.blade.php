@@ -120,7 +120,7 @@
                     ];
                 @endphp
 
-                @canany(['moderator-order-management.show', 'moderator-order-management.create'])
+                {{-- @canany(['moderator-order-management.show', 'moderator-order-management.create'])
                     <li class="nav-item">
                         <a class="nav-link menu-link {{ active_menu($moderatorOrderMenuRoutes, 'active') }}" href="#sidebarModeratorOrders" data-bs-toggle="collapse" role="button"
                             aria-expanded="{{ active_menu($moderatorOrderMenuRoutes, 'true') ?? 'false' }}" aria-controls="sidebarModeratorOrders">
@@ -141,7 +141,7 @@
                             </ul>
                         </div>
                     </li>
-                @endcanany
+                @endcanany --}}
 
                 @unless($hideRegularOrderMenu)
                 @canany(['orders.all', 'orders.pending', 'orders.confirmed', 'orders.packaging', 'orders.shipped', 'orders.delivered', 'orders.cancelled'])
