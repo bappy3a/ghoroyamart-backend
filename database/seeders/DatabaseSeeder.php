@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
                 'user_type' => 'admin',
                 'status' => 'active',
                 'email_verified_at' => now(),
-                'password' => Hash::make('password'),
+                'password' => Hash::make('GIM$Ge$59Whl'),
             ],
         );
 
