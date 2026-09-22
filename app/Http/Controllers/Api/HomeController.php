@@ -200,7 +200,7 @@ class HomeController extends Controller
 
         return Category::query()
             ->where('is_active', true)
-            ->where('is_popular', true)
+            ->where('is_featured', true)
             ->withCount(['products as products_count' => $publishedScope])
             ->orderBy('name')
             ->limit(max(1, $limit))
