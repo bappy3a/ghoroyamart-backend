@@ -280,10 +280,16 @@
                                         <div class="mb-3">
                                             <label class="form-label" for="product-discount-input">Discount</label>
                                             <div class="input-group mb-3">
-                                                <span class="input-group-text" id="product-discount-addon">%</span>
-                                                <input type="number" step="any" class="form-control" id="product-discount-input" name="discount_percentage" value="{{ old('discount_percentage') }}" placeholder="Enter discount" aria-label="discount" aria-describedby="product-discount-addon">
+                                                <select class="form-select" id="product-discount-type" name="discount_type" style="max-width: 120px;" aria-label="discount type">
+                                                    <option value="percentage" {{ old('discount_type', 'percentage') === 'percentage' ? 'selected' : '' }}>%</option>
+                                                    <option value="amount" {{ old('discount_type', 'percentage') === 'amount' ? 'selected' : '' }}>Amount</option>
+                                                </select>
+                                                <input type="number" step="any" min="0" class="form-control" id="product-discount-input" name="discount_value" value="{{ old('discount_value') }}" placeholder="Enter discount" aria-label="discount">
                                             </div>
-                                            @error('discount_percentage')
+                                            @error('discount_type')
+                                                <div class="text-danger small">{{ $message }}</div>
+                                            @enderror
+                                            @error('discount_value')
                                                 <div class="text-danger small">{{ $message }}</div>
                                             @enderror
                                         </div>

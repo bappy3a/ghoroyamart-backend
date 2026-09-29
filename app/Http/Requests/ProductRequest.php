@@ -61,7 +61,13 @@ class ProductRequest extends FormRequest
             'product_location' => ['nullable', 'string', Rule::in(['store', 'warehouse'])],
             'unit' => ['nullable', 'string', 'max:20'],
             'regular_price' => ['required', 'numeric', 'min:0'],
-            'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount_type' => ['nullable', 'string', Rule::in(['percentage', 'amount'])],
+            'discount_value' => array_filter([
+                'nullable',
+                'numeric',
+                'min:0',
+                $this->input('discount_type') === 'amount' ? 'lte:regular_price' : 'max:100',
+            ]),
             'num_of_sale' => ['nullable', 'integer', 'min:0'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
@@ -96,6 +102,8 @@ class ProductRequest extends FormRequest
         return [
             'sku.not_regex' => 'The SKU must not contain spaces.',
             'variants.*.sku.not_regex' => 'The variant SKU must not contain spaces.',
+            'discount_value.max' => 'Discount percentage cannot exceed 100%.',
+            'discount_value.lte' => 'Discount amount cannot exceed the regular price.',
         ];
     }
 }

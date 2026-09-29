@@ -40,6 +40,7 @@ class Product extends Model
         'price',
         'discount_amount',
         'discount_percentage',
+        'discount_type',
         'discount_start_date',
         'discount_end_date',
         'is_discounted',

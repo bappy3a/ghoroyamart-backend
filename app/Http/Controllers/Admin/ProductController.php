@@ -372,19 +372,23 @@ class ProductController extends Controller
         $regularPrice = (float) $request->input('regular_price', 0);
         $data['regular_price'] = $regularPrice;
 
-        $discountPercentage = (float) $request->input('discount_percentage', 0);
-        $data['discount_percentage'] = $discountPercentage;
+        $discountType = $request->input('discount_type') === 'amount' ? 'amount' : 'percentage';
+        $discountValue = max(0, (float) $request->input('discount_value', 0));
+        $data['discount_type'] = $discountType;
 
-        // Calculate price after discount
-        if ($discountPercentage > 0) {
-            $data['price'] = $regularPrice - ($regularPrice * $discountPercentage / 100);
-            $data['discount_amount'] = $regularPrice * $discountPercentage / 100;
-            $data['is_discounted'] = true;
+        // Derive both amount and percentage from whichever the admin entered
+        if ($discountType === 'amount') {
+            $discountAmount = min($discountValue, $regularPrice);
+            $discountPercentage = $regularPrice > 0 ? $discountAmount / $regularPrice * 100 : 0;
         } else {
-            $data['price'] = $regularPrice;
-            $data['discount_amount'] = 0;
-            $data['is_discounted'] = false;
+            $discountPercentage = min($discountValue, 100);
+            $discountAmount = $regularPrice * $discountPercentage / 100;
         }
+
+        $data['discount_percentage'] = round($discountPercentage, 2);
+        $data['discount_amount'] = round($discountAmount, 2);
+        $data['price'] = round($regularPrice - $discountAmount, 2);
+        $data['is_discounted'] = $discountAmount > 0;
 
         // Statistics fields - preserve existing values on update
         if ($product) {
