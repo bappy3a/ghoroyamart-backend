@@ -188,7 +188,7 @@
                     @error('image')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <div class="form-text">Wide images work best (about 1400×900px). Shown full-bleed behind the text.</div>
+                    <div class="form-text">Wide images work best (about 1250×400px). Shown full-bleed behind the text.</div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3">

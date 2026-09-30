@@ -100,6 +100,7 @@
                 </div>
                 <p class="text-muted mb-3">Each item: banner image, title, category, and products limit.</p>
                 <div id="shopping-items-wrapper" class="d-flex flex-column gap-3"></div>
+                <div class="form-text">Wide images work best (about 1250×200px). Shown full-bleed behind the text.</div>
             </div>
 
             <div class="tab-pane fade" id="tab-deals" role="tabpanel">
@@ -116,7 +117,7 @@
                 <div class="row g-3">
                     <div class="col-md-6"><label class="form-label">YouTube Link</label><input type="url" class="form-control" name="home_video_link" value="{{ old('home_video_link', ($settings['home_video_link'] ?? '') === '#' ? '' : ($settings['home_video_link'] ?? '')) }}"></div>
                     <div class="col-md-6"><label class="form-label">Video Banner Text</label><input type="text" class="form-control" name="home_video_banner_text" value="{{ old('home_video_banner_text', $settings['home_video_banner_text']) }}"></div>
-                    <div class="col-md-6"><label class="form-label">Video Banner Image</label><input type="file" class="form-control" name="home_video_banner" accept="image/*">@if(!empty($settings['home_video_banner']))<img src="{{ api_asset($settings['home_video_banner']) }}" class="img-thumbnail mt-2" style="max-height:100px;" alt="Video banner">@endif</div>
+                    <div class="col-md-6"><label class="form-label">Video Banner Image</label><input type="file" class="form-control" name="home_video_banner" accept="image/*"><div class="form-text">Recommended image size: about 1250 × 200 px.</div>@if(!empty($settings['home_video_banner']))<img src="{{ api_asset($settings['home_video_banner']) }}" class="img-thumbnail mt-2" style="max-height:100px;" alt="Video banner">@endif</div>
                 </div>
 
                 <hr>
@@ -126,7 +127,7 @@
                     <div class="col-md-4"><label class="form-label">Title/Text</label><input type="text" class="form-control" name="home_trending_banner_text" value="{{ old('home_trending_banner_text', $settings['home_trending_banner_text']) }}"></div>
                     <div class="col-md-4"><label class="form-label">Link</label><input type="url" class="form-control" name="home_trending_banner_link" value="{{ old('home_trending_banner_link', ($settings['home_trending_banner_link'] ?? '') === '#' ? '' : ($settings['home_trending_banner_link'] ?? '')) }}"></div>
                     <div class="col-md-4"><label class="form-label">Link Text</label><input type="text" class="form-control" name="home_trending_banner_link_text" value="{{ old('home_trending_banner_link_text', $settings['home_trending_banner_link_text']) }}"></div>
-                    <div class="col-md-4"><label class="form-label">Banner Image</label><input type="file" class="form-control" name="home_trending_banner_image" accept="image/*">@if(!empty($settings['home_trending_banner_image']))<img src="{{ api_asset($settings['home_trending_banner_image']) }}" class="img-thumbnail mt-2" style="max-height:100px;" alt="Trending banner">@endif</div>
+                    <div class="col-md-4"><label class="form-label">Banner Image</label><input type="file" class="form-control" name="home_trending_banner_image" accept="image/*"><div class="form-text">Recommended image size: about 1250 × 200 px.</div>@if(!empty($settings['home_trending_banner_image']))<img src="{{ api_asset($settings['home_trending_banner_image']) }}" class="img-thumbnail mt-2" style="max-height:100px;" alt="Trending banner">@endif</div>
                 </div>
             </div>
 
@@ -284,6 +285,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Banner Image</label>
                             <input type="file" class="form-control" name="category_banners_images[${index}]" accept="image/*">
+                            <div class="form-text">Recommended image size: about 1250 × 200 px.</div>
                             <input type="hidden" name="category_banners[${index}][existing_image]" value="${data.banner_image || ''}">
                             ${data.banner_image ? `<img src="${resolveImageUrl(data.banner_image)}" class="img-thumbnail mt-2" style="max-height:80px;" alt="Banner">` : ''}
                         </div>
@@ -353,6 +355,7 @@
                         <div class="col-md-3">
                             <label class="form-label">Banner Image</label>
                             <input type="file" class="form-control" name="shopping_section_item_images[${index}]" accept="image/*">
+                            <div class="form-text">Recommended image size: about 1250 × 200 px.</div>
                             <input type="hidden" name="shopping_section_items[${index}][existing_image]" value="${data.banner_image || ''}">
                             ${data.banner_image ? `<img src="${resolveImageUrl(data.banner_image)}" class="img-thumbnail mt-2" style="max-height:80px;" alt="Shopping Banner">` : ''}
                         </div>
@@ -418,6 +421,7 @@
                         <div class="col-md-5">
                             <label class="form-label">Banner Image</label>
                             <input type="file" class="form-control" name="deal_section_item_images[${index}]" accept="image/*">
+                            <div class="form-text">Recommended image size: about 1250 × 200 px.</div>
                             <input type="hidden" name="deal_section_items[${index}][existing_image]" value="${data.banner_image || ''}">
                             ${data.banner_image ? `<img src="${resolveImageUrl(data.banner_image)}" class="img-thumbnail mt-2" style="max-height:80px;" alt="Deal Banner">` : ''}
                         </div>
