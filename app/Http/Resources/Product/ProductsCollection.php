@@ -70,17 +70,25 @@ class ProductsCollection extends ResourceCollection
                 'variants' => $item->variants
                     ->where('is_active', true)
                     ->values()
-                    ->map(function ($variant) {
+                    ->map(function ($variant) use ($item) {
                         $attributes = $variant->relationLoaded('values')
                             ? $variant->values
                             : $variant->values()->with(['attribute', 'value'])->get();
+                        $sellingPrice = (float) $variant->selling_price;
+                        $discountAmount = max(0, (float) $item->regular_price - (float) $item->price);
+                        $regularPrice = $sellingPrice + $discountAmount;
 
                         return [
                             'id' => $variant->id,
                             'sku' => $variant->sku,
                             'name' => $variant->name,
                             'image' => $variant->image ? api_asset($variant->image) : null,
-                            'selling_price' => $variant->selling_price,
+                            'selling_price' => $sellingPrice,
+                            'regular_price' => $regularPrice,
+                            'discount_amount' => $discountAmount,
+                            'discount_percentage' => $regularPrice > 0
+                                ? round(($discountAmount / $regularPrice) * 100, 2)
+                                : 0,
                             'quantity' => $variant->quantity,
                             'attributes' => $attributes->map(fn ($row) => [
                                 'attribute' => $row->attribute?->name,

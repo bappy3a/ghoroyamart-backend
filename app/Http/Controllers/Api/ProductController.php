@@ -125,7 +125,7 @@ class ProductController extends Controller
             $images
         ))));
 
-        $variants = $product->variants->map(function ($variant) {
+        $variants = $product->variants->map(function ($variant) use ($product) {
             $attributes = $variant->values->map(fn ($row) => [
                 'attribute_id' => $row->variant_attribute_id,
                 'attribute' => $row->attribute?->name,
@@ -134,13 +134,22 @@ class ProductController extends Controller
                 'value' => $row->value?->value,
             ])->values()->all();
 
+            $sellingPrice = (float) $variant->selling_price;
+            $discountAmount = max(0, (float) $product->regular_price - (float) $product->price);
+            $regularPrice = $sellingPrice + $discountAmount;
+
             return [
                 'id' => $variant->id,
                 'sku' => $variant->sku,
                 'name' => $variant->name,
                 'image' => $variant->image ? api_asset($variant->image) : null,
                 'quantity' => $variant->quantity,
-                'selling_price' => $variant->selling_price,
+                'selling_price' => $sellingPrice,
+                'regular_price' => $regularPrice,
+                'discount_amount' => $discountAmount,
+                'discount_percentage' => $regularPrice > 0
+                    ? round(($discountAmount / $regularPrice) * 100, 2)
+                    : 0,
                 'attributes' => $attributes,
             ];
         })->values()->all();
