@@ -156,9 +156,9 @@ class KathaProductSeeder extends Seeder
                         'num_of_views' => 0,
                         'num_of_reviews' => 0,
                         'reviews_avg' => 0,
-                        'meta_title' => $productData['name'].' | Agonito',
+                        'meta_title' => $productData['name'].' | Ghoroya Mart',
                         'meta_description' => self::SHORT_DESCRIPTION,
-                        'meta_keywords' => 'নকশি কাঁথা, হাতের কাজের কাঁথা, দেশি কারুশিল্প, ঐতিহ্যবাহী কাঁথা, Agonito',
+                        'meta_keywords' => 'নকশি কাঁথা, হাতের কাজের কাঁথা, দেশি কারুশিল্প, ঐতিহ্যবাহী কাঁথা, Ghoroya Mart',
                         'meta_image' => self::IMAGE,
                     ]
                 );
