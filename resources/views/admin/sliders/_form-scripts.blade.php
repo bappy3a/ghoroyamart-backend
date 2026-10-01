@@ -3,6 +3,15 @@
         const imageInput = document.getElementById('image');
         const imagePreviewImg = document.getElementById('image-preview-img');
         const imagePreviewPlaceholder = document.getElementById('image-preview-placeholder');
+        const textColorInput = document.getElementById('text_color');
+        const textColorValue = document.getElementById('text-color-value');
+
+        textColorInput?.addEventListener('input', () => {
+            if (textColorValue) {
+                textColorValue.value = textColorInput.value;
+                textColorValue.textContent = textColorInput.value;
+            }
+        });
 
         imageInput?.addEventListener('change', () => {
             const file = imageInput.files?.[0];

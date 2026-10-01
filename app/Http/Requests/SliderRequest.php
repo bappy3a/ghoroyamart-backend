@@ -29,6 +29,7 @@ class SliderRequest extends FormRequest
             'subtitle' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'text_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'button_text' => ['nullable', 'string', 'max:150'],
             'button_link' => ['nullable', 'string', 'max:255'],
             'alt_text' => ['nullable', 'string', 'max:255'],
@@ -43,6 +44,7 @@ class SliderRequest extends FormRequest
         return [
             'subtitle' => 'eyebrow',
             'description' => 'copy',
+            'text_color' => 'text color',
             'button_text' => 'CTA text',
             'button_link' => 'CTA link',
             'image' => 'hero image',

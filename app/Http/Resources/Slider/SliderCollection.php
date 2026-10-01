@@ -25,6 +25,7 @@ class SliderCollection extends ResourceCollection
                 'eyebrow' => $item->subtitle,
                 'title' => $item->title,
                 'copy' => $item->description,
+                'text_color' => $item->text_color,
                 'cta' => $item->button_text,
                 'cta_link' => $item->button_link,
                 'alt_text' => $item->alt_text,

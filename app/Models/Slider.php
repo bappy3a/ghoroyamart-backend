@@ -20,6 +20,7 @@ class Slider extends Model
         'subtitle',
         'title',
         'description',
+        'text_color',
         'price_text',
         'price_value',
         'text',

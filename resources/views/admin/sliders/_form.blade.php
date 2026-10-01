@@ -70,6 +70,27 @@
                     <div class="form-text">Short supporting sentence under the title (desktop only on the storefront).</div>
                 </div>
 
+                <div class="mb-3">
+                    <label for="text_color" class="form-label">Text color</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input
+                            type="color"
+                            class="form-control form-control-color @error('text_color') is-invalid @enderror"
+                            id="text_color"
+                            name="text_color"
+                            value="{{ old('text_color', $slider->text_color ?? '#287a4b') }}"
+                            title="Choose slider text color"
+                        >
+                        <output id="text-color-value" for="text_color" class="font-monospace small">
+                            {{ old('text_color', $slider->text_color ?? '#287a4b') }}
+                        </output>
+                    </div>
+                    @error('text_color')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">Applied to the eyebrow, title, and supporting copy on the storefront.</div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
