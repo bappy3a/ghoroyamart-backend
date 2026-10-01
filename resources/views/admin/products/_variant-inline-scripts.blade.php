@@ -94,6 +94,8 @@
                     sku: row.querySelector('[data-field="sku"]')?.value || '',
                     quantity: row.querySelector('[data-field="quantity"]')?.value || '',
                     selling_price: row.querySelector('[data-field="selling_price"]')?.value || '',
+                    discount_type: row.querySelector('[data-field="discount_type"]')?.value || 'percentage',
+                    discount_value: row.querySelector('[data-field="discount_value"]')?.value || '',
                     purchase_price: row.querySelector('[data-field="purchase_price"]')?.value || '',
                     image: row.querySelector('[data-field="image"]')?.dataset.existingImage || '',
                     attribute_value_ids: key.split('-'),
@@ -303,13 +305,45 @@
             render();
         }
 
+        function finalPrice(regular, type, value) {
+            const price = Math.max(0, parseFloat(regular) || 0);
+            const discount = Math.max(0, parseFloat(value) || 0);
+            const off = type === 'amount' ? Math.min(discount, price) : price * Math.min(discount, 100) / 100;
+
+            return (price - off).toFixed(2);
+        }
+
+        rows.addEventListener('input', (event) => {
+            const row = event.target.closest('tr[data-key]');
+
+            if (row && event.target.matches('[data-field="selling_price"], [data-field="discount_value"]')) {
+                updateFinalPrice(row);
+            }
+        });
+
+        rows.addEventListener('change', (event) => {
+            const row = event.target.closest('tr[data-key]');
+
+            if (row && event.target.matches('[data-field="discount_type"]')) {
+                updateFinalPrice(row);
+            }
+        });
+
+        function updateFinalPrice(row) {
+            row.querySelector('[data-field="final_price"]').textContent = finalPrice(
+                row.querySelector('[data-field="selling_price"]').value,
+                row.querySelector('[data-field="discount_type"]').value,
+                row.querySelector('[data-field="discount_value"]').value
+            );
+        }
+
         function renderRows(combinations) {
             const enabledCombinations = combinations.filter((combination) => rowState[combinationKey(combination)]?.enabled);
 
             selectedCount.textContent = `${enabledCombinations.length} selected`;
 
             if (!enabledCombinations.length) {
-                rows.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Choose combinations above to add variant details.</td></tr>';
+                rows.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Choose combinations above to add variant details.</td></tr>';
                 return;
             }
 
@@ -319,6 +353,8 @@
                 const sku = saved.sku || [baseSku(), ...combination.map((item) => slugPart(item.valueSlug || item.valueName))].filter(Boolean).join('-');
                 const quantity = saved.quantity ?? '0';
                 const sellingPrice = saved.selling_price ?? defaultSellingPrice();
+                const discountType = saved.discount_type || 'percentage';
+                const discountValue = saved.discount_value ?? '0';
                 const purchasePrice = saved.purchase_price ?? defaultPurchasePrice();
                 const image = saved.image || '';
                 const imagePreview = image
@@ -347,6 +383,16 @@
                         <td>
                             <input type="number" step="0.01" class="form-control" name="variants[${key}][selling_price]" value="${escapeHtml(sellingPrice)}" min="0" data-field="selling_price" required>
                         </td>
+                        <td>
+                            <div class="input-group">
+                                <input type="number" step="0.01" class="form-control" name="variants[${key}][discount_value]" value="${escapeHtml(discountValue)}" min="0" data-field="discount_value">
+                                <select class="form-select" name="variants[${key}][discount_type]" data-field="discount_type" style="max-width: 70px;">
+                                    <option value="percentage" ${discountType === 'percentage' ? 'selected' : ''}>%</option>
+                                    <option value="amount" ${discountType === 'amount' ? 'selected' : ''}>৳</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td class="fw-semibold" data-field="final_price">${finalPrice(sellingPrice, discountType, discountValue)}</td>
                         <td>
                             <input type="number" step="0.01" class="form-control" name="variants[${key}][purchase_price]" value="${escapeHtml(purchasePrice)}" min="0" data-field="purchase_price">
                         </td>

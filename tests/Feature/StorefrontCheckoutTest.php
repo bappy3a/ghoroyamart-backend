@@ -368,6 +368,11 @@ class StorefrontCheckoutTest extends TestCase
             'sku' => 'AD-1-ONLY',
             'combination_hash' => 'only',
             'quantity' => 5,
+            'regular_price' => 280,
+            'discount_type' => 'amount',
+            'discount_value' => 25,
+            'discount_amount' => 25,
+            'discount_percentage' => 8.93,
             'selling_price' => 255,
             'is_active' => true,
         ]);
@@ -385,7 +390,8 @@ class StorefrontCheckoutTest extends TestCase
         ])
             ->assertCreated()
             ->assertJsonPath('data.items.0.product_variant_id', $onlyVariant->id)
-            ->assertJsonPath('data.items.0.price', 255);
+            ->assertJsonPath('data.items.0.price', 255)
+            ->assertJsonPath('data.items.0.regular_price', 280);
     }
 
     public function test_user_can_list_and_view_own_orders(): void

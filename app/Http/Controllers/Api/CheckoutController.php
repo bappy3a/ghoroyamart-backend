@@ -101,7 +101,9 @@ class CheckoutController extends Controller
                         'product_sku' => $variant?->sku ?: $product->sku,
                         'product_image' => $variant?->image ?: $product->getRawOriginal('thumbnail_image'),
                         'price' => $item['price'],
-                        'regular_price' => $product->regular_price,
+                        'regular_price' => $variant && $variant->regular_price !== null
+                            ? $variant->regular_price
+                            : $product->regular_price,
                         'purchase_price' => $variant?->purchase_price ?? $product->purchase_price,
                         'quantity' => $item['quantity'],
                         'subtotal' => $item['subtotal'],

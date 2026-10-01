@@ -74,9 +74,12 @@ class ProductsCollection extends ResourceCollection
                         $attributes = $variant->relationLoaded('values')
                             ? $variant->values
                             : $variant->values()->with(['attribute', 'value'])->get();
+                        $hasVariantPricing = $variant->regular_price !== null;
                         $sellingPrice = (float) $variant->selling_price;
-                        $discountAmount = max(0, (float) $item->regular_price - (float) $item->price);
-                        $regularPrice = $sellingPrice + $discountAmount;
+                        $discountAmount = $hasVariantPricing
+                            ? (float) $variant->discount_amount
+                            : max(0, (float) $item->regular_price - (float) $item->price);
+                        $regularPrice = $hasVariantPricing ? (float) $variant->regular_price : $sellingPrice + $discountAmount;
 
                         return [
                             'id' => $variant->id,
@@ -85,6 +88,9 @@ class ProductsCollection extends ResourceCollection
                             'image' => $variant->image ? api_asset($variant->image) : null,
                             'selling_price' => $sellingPrice,
                             'regular_price' => $regularPrice,
+                            'discount_type' => $hasVariantPricing ? $variant->discount_type : ($item->discount_type ?: 'percentage'),
+                            'discount_value' => $hasVariantPricing ? (float) $variant->discount_value : null,
+                            'is_discounted' => $discountAmount > 0,
                             'discount_amount' => $discountAmount,
                             'discount_percentage' => $regularPrice > 0
                                 ? round(($discountAmount / $regularPrice) * 100, 2)

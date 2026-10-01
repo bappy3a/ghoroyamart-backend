@@ -14,7 +14,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <div>
             <h5 class="card-title mb-0">Product Variants</h5>
-            <p class="text-muted mb-0 mt-1">Add SKU, image, quantity, selling price, and purchase price for each variant.</p>
+            <p class="text-muted mb-0 mt-1">Add SKU, image, quantity, regular price, discount (percentage or fixed amount), and purchase price for each variant.</p>
         </div>
         <a href="{{ route('variant-attributes.index') }}" class="btn btn-light btn-sm">
             <i class="ri-list-settings-line align-middle me-1"></i>
@@ -98,13 +98,15 @@
                                     <th style="min-width: 170px;">SKU</th>
                                     <th style="min-width: 190px;">Image</th>
                                     <th style="width: 120px;">Quantity</th>
-                                    <th style="width: 145px;">Selling Price</th>
+                                    <th style="width: 145px;">Regular Price</th>
+                                    <th style="width: 200px;">Discount</th>
+                                    <th style="width: 120px;">Final Price</th>
                                     <th style="width: 145px;">Purchase Price</th>
                                 </tr>
                             </thead>
                             <tbody id="inlineVariantRows">
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">Choose combinations above to add variant details.</td>
+                                    <td colspan="8" class="text-center text-muted py-4">Choose combinations above to add variant details.</td>
                                 </tr>
                             </tbody>
                         </table>

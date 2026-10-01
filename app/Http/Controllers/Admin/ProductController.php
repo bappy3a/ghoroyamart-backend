@@ -598,7 +598,9 @@ class ProductController extends Controller
                     'sku' => $variant->sku,
                     'image' => $variant->image,
                     'quantity' => $variant->quantity,
-                    'selling_price' => $variant->selling_price,
+                    'selling_price' => $variant->regular_price ?? $variant->selling_price,
+                    'discount_type' => $variant->discount_type ?: 'percentage',
+                    'discount_value' => $variant->discount_value ?? 0,
                     'purchase_price' => $variant->purchase_price,
                     'is_active' => $variant->is_active,
                     'attribute_value_ids' => $variant->values
@@ -657,7 +659,7 @@ class ProductController extends Controller
                 'sku' => $sku,
                 'combination_hash' => $combinationHash,
                 'quantity' => (int) ($variantData['quantity'] ?? 0),
-                'selling_price' => (float) ($variantData['selling_price'] ?? 0),
+                ...$this->variantPricing($variantData),
                 'purchase_price' => ($variantData['purchase_price'] ?? null) !== null && ($variantData['purchase_price'] ?? '') !== ''
                     ? (float) $variantData['purchase_price']
                     : null,
@@ -686,6 +688,34 @@ class ProductController extends Controller
         $product->variants()
             ->when(! empty($submittedIds), fn ($query) => $query->whereNotIn('id', $submittedIds))
             ->delete();
+    }
+
+    /**
+     * The submitted "selling_price" is the regular price; the stored selling_price is the
+     * final price after the variant discount, so checkout keeps charging selling_price.
+     */
+    protected function variantPricing(array $variantData): array
+    {
+        $regularPrice = max(0, (float) ($variantData['selling_price'] ?? 0));
+        $type = ($variantData['discount_type'] ?? null) === 'amount' ? 'amount' : 'percentage';
+        $value = max(0, (float) ($variantData['discount_value'] ?? 0));
+
+        if ($type === 'amount') {
+            $amount = min($value, $regularPrice);
+            $percentage = $regularPrice > 0 ? $amount / $regularPrice * 100 : 0;
+        } else {
+            $percentage = min($value, 100);
+            $amount = $regularPrice * $percentage / 100;
+        }
+
+        return [
+            'regular_price' => $regularPrice,
+            'discount_type' => $type,
+            'discount_value' => $value,
+            'discount_amount' => round($amount, 2),
+            'discount_percentage' => round($percentage, 2),
+            'selling_price' => round($regularPrice - $amount, 2),
+        ];
     }
 
     protected function loadAttributeValues(array $valueIds): Collection

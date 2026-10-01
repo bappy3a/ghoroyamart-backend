@@ -17,6 +17,11 @@ class ProductVariant extends Model
         'sku',
         'combination_hash',
         'quantity',
+        'regular_price',
+        'discount_type',
+        'discount_value',
+        'discount_amount',
+        'discount_percentage',
         'selling_price',
         'purchase_price',
         'sort_order',
@@ -25,6 +30,10 @@ class ProductVariant extends Model
 
     protected $casts = [
         'quantity' => 'integer',
+        'regular_price' => 'double',
+        'discount_value' => 'double',
+        'discount_amount' => 'double',
+        'discount_percentage' => 'double',
         'selling_price' => 'double',
         'purchase_price' => 'double',
         'sort_order' => 'integer',

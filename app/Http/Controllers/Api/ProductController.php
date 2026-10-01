@@ -125,7 +125,7 @@ class ProductController extends Controller
             $images
         ))));
 
-        $variants = $product->variants->map(function ($variant) use ($product) {
+        $variants = $product->variants->where('is_active', true)->map(function ($variant) use ($product) {
             $attributes = $variant->values->map(fn ($row) => [
                 'attribute_id' => $row->variant_attribute_id,
                 'attribute' => $row->attribute?->name,
@@ -134,9 +134,12 @@ class ProductController extends Controller
                 'value' => $row->value?->value,
             ])->values()->all();
 
+            $hasVariantPricing = $variant->regular_price !== null;
             $sellingPrice = (float) $variant->selling_price;
-            $discountAmount = max(0, (float) $product->regular_price - (float) $product->price);
-            $regularPrice = $sellingPrice + $discountAmount;
+            $discountAmount = $hasVariantPricing
+                ? (float) $variant->discount_amount
+                : max(0, (float) $product->regular_price - (float) $product->price);
+            $regularPrice = $hasVariantPricing ? (float) $variant->regular_price : $sellingPrice + $discountAmount;
 
             return [
                 'id' => $variant->id,
@@ -146,6 +149,9 @@ class ProductController extends Controller
                 'quantity' => $variant->quantity,
                 'selling_price' => $sellingPrice,
                 'regular_price' => $regularPrice,
+                'discount_type' => $hasVariantPricing ? $variant->discount_type : ($product->discount_type ?: 'percentage'),
+                'discount_value' => $hasVariantPricing ? (float) $variant->discount_value : null,
+                'is_discounted' => $discountAmount > 0,
                 'discount_amount' => $discountAmount,
                 'discount_percentage' => $regularPrice > 0
                     ? round(($discountAmount / $regularPrice) * 100, 2)

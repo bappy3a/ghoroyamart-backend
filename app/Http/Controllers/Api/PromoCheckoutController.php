@@ -479,7 +479,9 @@ class PromoCheckoutController extends Controller
                     'product_sku' => $product->sku,
                     'product_image' => $variant?->image ?: $product->getRawOriginal('thumbnail_image'),
                     'price' => $itemPrice,
-                    'regular_price' => $product->regular_price,
+                    'regular_price' => $variant && $variant->regular_price !== null
+                        ? $variant->regular_price
+                        : $product->regular_price,
                     'purchase_price' => $variant?->purchase_price ?? $product->purchase_price,
                     'quantity' => $itemQuantity,
                     'subtotal' => $itemSubtotal,

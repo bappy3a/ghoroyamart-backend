@@ -90,6 +90,8 @@ class ProductRequest extends FormRequest
             'variants.*.sku' => ['required_with:variants', 'string', 'max:191', 'not_regex:/\s/', 'distinct'],
             'variants.*.quantity' => ['required_with:variants', 'integer', 'min:0'],
             'variants.*.selling_price' => ['required_with:variants', 'numeric', 'min:0'],
+            'variants.*.discount_type' => ['nullable', 'string', Rule::in(['percentage', 'amount'])],
+            'variants.*.discount_value' => ['nullable', 'numeric', 'min:0'],
             'variants.*.purchase_price' => ['nullable', 'numeric', 'min:0'],
             'variants.*.image' => ['nullable', 'image', 'max:5120'],
             'variants.*.attribute_value_ids' => ['required_with:variants', 'array', 'min:1'],
