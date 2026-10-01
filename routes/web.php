@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 require __DIR__.'/admin.php';
 
 Route::get('/sms', function () {
-    $message = "Your Agonito verification code is 772322. Use this code to verify your account.Please do not share this code with anyone.";
+    $message = "Your Ghoroya Mart verification code is 772322. Use this code to verify your account.Please do not share this code with anyone.";
     $data =  smsSend($message, '1721209595', '880');
     dd($data);
     return 'SMS sent successfully';
