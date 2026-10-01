@@ -433,6 +433,7 @@ if (! function_exists('minsms')) {
                 'message' => $message,
                 'mobileNumber' => $mobileNo,
             ]);
+        dd($response->body());
         if ($response->successful()) {
             SmsLog::query()->create([
                 'mobile_no' => $loggedMobileNo ?? $mobileNo,
