@@ -11,7 +11,6 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Models\ShippingAddress;
-use App\Services\SteadfastCourier;
 use App\Services\OrderStockService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
@@ -851,7 +850,7 @@ class OrderController extends Controller
         return redirect()->back()->with($result['type'], $result['message']);
     }
 
-    public function updateStatus(Request $request, Order $order, SteadfastCourier $steadfastCourier)
+    public function updateStatus(Request $request, Order $order)
     {
         $this->authorizeOrderAccess($order);
 
@@ -899,25 +898,26 @@ class OrderController extends Controller
         $statusDetails = $this->orderStatusDetails($targetStatus);
         $steadfastResponse = null;
 
-        if ($targetStatus === 'processing' && blank($order->steadfast_consignment_id)) {
-            try {
-                $steadfastResponse = $steadfastCourier->createOrder($order);
-            } catch (Throwable $exception) {
-                Log::error('Steadfast order creation failed.', [
-                    'order_id' => $order->id,
-                    'target_status' => $targetStatus,
-                    'error' => $exception->getMessage(),
-                ]);
-
-                return $this->orderStatusResponse(
-                    $request,
-                    false,
-                    'Steadfast order failed: '.$exception->getMessage(),
-                    $order,
-                    422
-                );
-            }
-        }
+        // Steadfast API call is temporarily disabled during order status updates.
+        // if ($targetStatus === 'processing' && blank($order->steadfast_consignment_id)) {
+        //     try {
+        //         $steadfastResponse = $steadfastCourier->createOrder($order);
+        //     } catch (Throwable $exception) {
+        //         Log::error('Steadfast order creation failed.', [
+        //             'order_id' => $order->id,
+        //             'target_status' => $targetStatus,
+        //             'error' => $exception->getMessage(),
+        //         ]);
+        //
+        //         return $this->orderStatusResponse(
+        //             $request,
+        //             false,
+        //             'Steadfast order failed: '.$exception->getMessage(),
+        //             $order,
+        //             422
+        //         );
+        //     }
+        // }
 
         try {
             DB::transaction(function () use (&$order, $targetStatus, $statusDetails, $steadfastResponse, $isCancellingOrder, $cancellationReason) {
@@ -1072,7 +1072,7 @@ class OrderController extends Controller
         }
     }
 
-    public function bulkMoveToPackaging(Request $request, SteadfastCourier $steadfastCourier): RedirectResponse
+    public function bulkMoveToPackaging(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'order_ids' => ['required', 'array', 'min:1', 'max:500'],
@@ -1112,46 +1112,48 @@ class OrderController extends Controller
                 }
             }
 
-            $ordersNeedingConsignment = $orders
-                ->filter(fn (Order $order) => blank($order->steadfast_consignment_id))
-                ->values();
-            $ordersAlreadyConsigned = $orders
-                ->filter(fn (Order $order) => filled($order->steadfast_consignment_id))
-                ->values();
-
             $steadfastResponsesByInvoice = collect();
             $failedInvoices = collect();
+            $successfulOrderIds = $orders->pluck('id')->values();
 
-            if ($ordersNeedingConsignment->isNotEmpty()) {
-                $steadfastResponses = $steadfastCourier->bulkCreateOrders($ordersNeedingConsignment);
-                $steadfastResponsesByInvoice = collect($steadfastResponses)
-                    ->filter(fn (array $item) => filled(data_get($item, 'invoice')))
-                    ->keyBy(fn (array $item) => (string) data_get($item, 'invoice'));
-
-                $failedInvoices = $ordersNeedingConsignment
-                    ->filter(function (Order $order) use ($steadfastResponsesByInvoice) {
-                        $response = $steadfastResponsesByInvoice->get($order->order_number);
-
-                        return ! $this->isSuccessfulSteadfastBulkItem($response);
-                    })
-                    ->map(fn (Order $order) => $order->order_number)
-                    ->values();
-            }
-
-            $successfulOrderIds = $ordersAlreadyConsigned
-                ->pluck('id')
-                ->merge(
-                    $ordersNeedingConsignment
-                        ->reject(fn (Order $order) => $failedInvoices->contains($order->order_number))
-                        ->pluck('id')
-                )
-                ->values();
-
-            if ($successfulOrderIds->isEmpty()) {
-                return redirect()
-                    ->route('orders.confirmed')
-                    ->with('error', 'Steadfast bulk order failed for all selected orders.');
-            }
+            // Steadfast bulk API call is temporarily disabled during order status updates.
+            // $ordersNeedingConsignment = $orders
+            //     ->filter(fn (Order $order) => blank($order->steadfast_consignment_id))
+            //     ->values();
+            // $ordersAlreadyConsigned = $orders
+            //     ->filter(fn (Order $order) => filled($order->steadfast_consignment_id))
+            //     ->values();
+            //
+            // if ($ordersNeedingConsignment->isNotEmpty()) {
+            //     $steadfastResponses = $steadfastCourier->bulkCreateOrders($ordersNeedingConsignment);
+            //     $steadfastResponsesByInvoice = collect($steadfastResponses)
+            //         ->filter(fn (array $item) => filled(data_get($item, 'invoice')))
+            //         ->keyBy(fn (array $item) => (string) data_get($item, 'invoice'));
+            //
+            //     $failedInvoices = $ordersNeedingConsignment
+            //         ->filter(function (Order $order) use ($steadfastResponsesByInvoice) {
+            //             $response = $steadfastResponsesByInvoice->get($order->order_number);
+            //
+            //             return ! $this->isSuccessfulSteadfastBulkItem($response);
+            //         })
+            //         ->map(fn (Order $order) => $order->order_number)
+            //         ->values();
+            // }
+            //
+            // $successfulOrderIds = $ordersAlreadyConsigned
+            //     ->pluck('id')
+            //     ->merge(
+            //         $ordersNeedingConsignment
+            //             ->reject(fn (Order $order) => $failedInvoices->contains($order->order_number))
+            //             ->pluck('id')
+            //     )
+            //     ->values();
+            //
+            // if ($successfulOrderIds->isEmpty()) {
+            //     return redirect()
+            //         ->route('orders.confirmed')
+            //         ->with('error', 'Steadfast bulk order failed for all selected orders.');
+            // }
 
             $movedCount = DB::transaction(function () use ($successfulOrderIds, $steadfastResponsesByInvoice) {
                 $orders = Order::whereKey($successfulOrderIds)
