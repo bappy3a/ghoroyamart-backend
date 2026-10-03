@@ -34,7 +34,7 @@
                             @endif
                         @endcan
                         <a href="{{ route('orders.invoice.print', $order) }}" target="_blank" class="btn btn-primary btn-sm"><i class="ri-printer-line align-middle me-1"></i> Print Invoice</a>
-                        <a href="{{ route('orders.thermal-invoice.print', $order) }}" target="_blank" class="btn btn-info btn-sm"><i class="ri-printer-line align-middle me-1"></i> Thermal Printer Invoice</a>
+                        {{-- <a href="{{ route('orders.thermal-invoice.print', $order) }}" target="_blank" class="btn btn-info btn-sm"><i class="ri-printer-line align-middle me-1"></i> Thermal Printer Invoice</a> --}}
                     </div>
                 </div>
             </div>

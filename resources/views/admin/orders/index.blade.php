@@ -395,7 +395,7 @@
                                                     </a>
                                                 </li>
                                                 <li class="list-inline-item" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Print Thermal Invoice">
-                                                    <a href="{{ route('orders.thermal-invoice.print', $order) }}" target="_blank" class="text-info d-inline-block">
+                                                    <a href="{{ route('orders.invoice.print', $order) }}" target="_blank" class="text-info d-inline-block">
                                                         <i class="ri-printer-line fs-16"></i>
                                                     </a>
                                                 </li>
