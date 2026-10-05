@@ -251,7 +251,7 @@
                             </div>
                         @endif
                     @elseif($nextStatus || $canCancelOrder)
-                        @if (in_array($nextStatus,['pending','confirmed','processing']))
+                        @if ($nextStatus || $canCancelOrder)
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 @if($nextStatus)
                                     <form id="next-order-status-form" class="update-status-form" method="POST" action="{{ route('orders.update-status', $order->id) }}">
