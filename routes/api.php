@@ -26,6 +26,7 @@ require __DIR__.'/api/home.php';
 require __DIR__.'/api/promo.php';
 require __DIR__.'/api/checkout.php';
 require __DIR__.'/api/orders.php';
+require __DIR__.'/api/reviews.php';
 require __DIR__.'/api/wishlist.php';
 require __DIR__.'/api/ai.php';
 require __DIR__.'/api/settings.php';
