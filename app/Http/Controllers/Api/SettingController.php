@@ -40,6 +40,7 @@ class SettingController extends Controller
                 ->map(fn ($path) => api_asset($path))
                 ->values()
                 ->all(),
+            'top_bar' => home_highlight_items($settings['home_top_bar_items'] ?? null, 'home_top_bar_items'),
             'delivery' => [
                 'inside_dhaka' => (float) ($settings['delivery_charge_inside_dhaka'] ?? 80),
                 'outside_dhaka' => (float) ($settings['delivery_charge_outside_dhaka'] ?? 150),

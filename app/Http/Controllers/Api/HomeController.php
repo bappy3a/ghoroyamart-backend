@@ -100,6 +100,8 @@ class HomeController extends Controller
                 'title' => $this->setting('home_product_review_title', ''),
                 'description' => $this->setting('home_product_review_description', ''),
             ],
+            'top_bar' => home_highlight_items($this->setting('home_top_bar_items'), 'home_top_bar_items'),
+            'promises' => home_highlight_items($this->setting('home_promise_items'), 'home_promise_items'),
             'blogs' => $this->blogs(6),
             'featured_section' => [
                 'subtitle' => $this->setting('home_featured_section_subtitle', 'Summer collection'),

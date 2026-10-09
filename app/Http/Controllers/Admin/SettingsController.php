@@ -43,6 +43,24 @@ class SettingsController extends Controller
                 'sort_order' => 1,
             ],
             [
+                'key' => 'home_top_bar_items',
+                'value' => json_encode(home_highlight_defaults('home_top_bar_items')),
+                'group' => 'Home Highlights',
+                'type' => 'highlights',
+                'label' => 'Top Bar Items',
+                'description' => 'Short highlights shown in the strip at the very top of every page.',
+                'sort_order' => 1,
+            ],
+            [
+                'key' => 'home_promise_items',
+                'value' => json_encode(home_highlight_defaults('home_promise_items')),
+                'group' => 'Home Highlights',
+                'type' => 'highlights',
+                'label' => 'Promises (scrolling strip)',
+                'description' => 'Promise cards in the scrolling strip below the home page slider. Subtitle is optional.',
+                'sort_order' => 2,
+            ],
+            [
                 'key' => 'social_facebook',
                 'value' => '#',
                 'group' => 'Social Media',
@@ -193,6 +211,7 @@ class SettingsController extends Controller
         $groupOrder = [
             'Menu Settings',
             'Contact Us',
+            'Home Highlights',
             'Social Media',
             'Image Gallery',
             'Delivery Charge',
@@ -270,6 +289,14 @@ class SettingsController extends Controller
                 'sort_order' => 1,
             ]
         );
+        foreach (['home_top_bar_items', 'home_promise_items'] as $highlightKey) {
+            if ($request->has($highlightKey . '_submitted')) {
+                $rows = is_array($request->input($highlightKey)) ? $request->input($highlightKey) : [];
+                $data[$highlightKey] = json_encode(home_highlight_items(json_encode(array_values($rows)), $highlightKey));
+            }
+            unset($data[$highlightKey . '_submitted']);
+        }
+
         unset(
             $data['payment_gateway_images'],
             $data['payment_gateway_existing'],
@@ -307,6 +334,7 @@ class SettingsController extends Controller
         }
 
         Setting::clearCache();
+        \App\Http\Controllers\Api\HomeController::clearCache();
 
         flash_message('Settings updated successfully!');
 

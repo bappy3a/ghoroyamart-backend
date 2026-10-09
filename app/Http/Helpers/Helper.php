@@ -268,6 +268,62 @@ if (! function_exists('setting')) {
     }
 }
 
+if (! function_exists('home_highlight_icons')) {
+    /** Icon names the storefront knows how to render for top bar / promise items. */
+    function home_highlight_icons(): array
+    {
+        return [
+            'truck' => 'Truck', 'rotate-ccw' => 'Return', 'shield-check' => 'Shield',
+            'headphones' => 'Headphones', 'clock' => 'Clock', 'sparkles' => 'Sparkles',
+            'gift' => 'Gift', 'credit-card' => 'Credit Card', 'badge-check' => 'Badge',
+            'package' => 'Package', 'phone' => 'Phone', 'percent' => 'Percent',
+            'heart' => 'Heart', 'star' => 'Star', 'zap' => 'Zap',
+        ];
+    }
+}
+
+if (! function_exists('home_highlight_defaults')) {
+    function home_highlight_defaults(string $key): array
+    {
+        return match ($key) {
+            'home_top_bar_items' => [
+                ['icon' => 'truck', 'title' => 'Cash on Delivery', 'subtitle' => ''],
+                ['icon' => 'rotate-ccw', 'title' => 'Easy Returns', 'subtitle' => ''],
+                ['icon' => 'shield-check', 'title' => 'Quality Products', 'subtitle' => ''],
+                ['icon' => 'headphones', 'title' => 'Customer Support', 'subtitle' => ''],
+            ],
+            'home_promise_items' => [
+                ['icon' => 'truck', 'title' => 'Cash on Delivery', 'subtitle' => 'ক্যাশ অন ডেলিভারি'],
+                ['icon' => 'clock', 'title' => 'Easy Returns', 'subtitle' => 'সহজ রিটার্ন নীতি'],
+                ['icon' => 'shield-check', 'title' => 'Quality Assured', 'subtitle' => 'নিশ্চিত মানের পণ্য'],
+                ['icon' => 'sparkles', 'title' => 'Fast Delivery', 'subtitle' => 'দ্রুত ডেলিভারি'],
+            ],
+            default => [],
+        };
+    }
+}
+
+if (! function_exists('home_highlight_items')) {
+    /** Decode a stored highlight list, falling back to defaults when never saved. */
+    function home_highlight_items(?string $raw, string $key): array
+    {
+        $items = json_decode((string) $raw, true);
+        if (! is_array($items)) {
+            return home_highlight_defaults($key);
+        }
+
+        return collect($items)
+            ->filter(fn ($item) => is_array($item) && trim((string) ($item['title'] ?? '')) !== '')
+            ->map(fn ($item) => [
+                'icon' => array_key_exists($item['icon'] ?? '', home_highlight_icons()) ? $item['icon'] : 'sparkles',
+                'title' => trim((string) $item['title']),
+                'subtitle' => trim((string) ($item['subtitle'] ?? '')),
+            ])
+            ->values()
+            ->all();
+    }
+}
+
 if (! function_exists('frontend_menu_defaults')) {
     function frontend_menu_defaults(): array
     {
