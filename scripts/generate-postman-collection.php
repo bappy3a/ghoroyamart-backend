@@ -120,6 +120,36 @@ if (pm.response.code >= 200 && pm.response.code < 300) {
 }
 JS,
         ]),
+        requestItem('Register (Mobile + Password)', 'POST', '/api/auth/register', [
+            'body' => ['name' => 'Test Customer', 'phone' => '{{phone}}', 'password' => 'secret1234', 'password_confirmation' => 'secret1234'],
+            'description' => 'Public. Creates an account and returns a Sanctum token. Password min 8 chars. Throttled 10/min.',
+            'test' => <<<'JS'
+if (pm.response.code >= 200 && pm.response.code < 300) {
+    const json = pm.response.json();
+    const token = json?.data?.token ?? json?.token;
+    if (token) pm.collectionVariables.set('token', token);
+}
+JS,
+        ]),
+        requestItem('Login (Mobile + Password)', 'POST', '/api/auth/login', [
+            'body' => ['phone' => '{{phone}}', 'password' => 'secret1234'],
+            'description' => 'Public. Locks the account for 15 minutes after 5 wrong passwords.',
+            'test' => <<<'JS'
+if (pm.response.code >= 200 && pm.response.code < 300) {
+    const json = pm.response.json();
+    const token = json?.data?.token ?? json?.token;
+    if (token) pm.collectionVariables.set('token', token);
+}
+JS,
+        ]),
+        requestItem('Forgot Password (Send OTP)', 'POST', '/api/auth/forgot-password', [
+            'body' => ['phone' => '{{phone}}'],
+            'description' => 'Public. Sends a reset OTP. Same response whether or not the number is registered.',
+        ]),
+        requestItem('Reset Password', 'POST', '/api/auth/reset-password', [
+            'body' => ['phone' => '{{phone}}', 'otp' => '{{otp}}', 'password' => 'newsecret1234', 'password_confirmation' => 'newsecret1234'],
+            'description' => 'Public. Verifies the OTP, sets the new password and revokes all existing tokens.',
+        ]),
         requestItem('Current User', 'GET', '/api/auth/me', ['auth' => true]),
         requestItem('Update Profile', 'PUT', '/api/auth/profile', [
             'auth' => true,

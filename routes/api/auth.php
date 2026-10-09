@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PasswordAuthController;
 use App\Http\Controllers\Api\ShippingAddressController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,22 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])
         ->middleware('throttle:10,1')
         ->name('verify-otp');
+
+    Route::post('/register', [PasswordAuthController::class, 'register'])
+        ->middleware('throttle:10,1')
+        ->name('register');
+
+    Route::post('/login', [PasswordAuthController::class, 'login'])
+        ->middleware('throttle:10,1')
+        ->name('login');
+
+    Route::post('/forgot-password', [PasswordAuthController::class, 'forgotPassword'])
+        ->middleware('throttle:5,1')
+        ->name('forgot-password');
+
+    Route::post('/reset-password', [PasswordAuthController::class, 'resetPassword'])
+        ->middleware('throttle:10,1')
+        ->name('reset-password');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('me');
