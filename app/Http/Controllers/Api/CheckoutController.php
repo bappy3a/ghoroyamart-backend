@@ -4,16 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Order\OrderResource;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\OrderTimeline;
-use App\Models\Product;
 use App\Models\ShippingAddress;
+use App\Services\CheckoutOrderService;
 use App\Services\CheckoutPricingService;
-use App\Services\OrderStockService;
 use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
@@ -23,10 +19,9 @@ class CheckoutController extends Controller
     use ApiResponse;
 
     public function __construct(
-        private readonly OrderStockService $orderStockService,
+        private readonly CheckoutOrderService $orders,
         private readonly CheckoutPricingService $pricing,
-    ) {
-    }
+    ) {}
 
     /**
      * Place a storefront order for the authenticated user.
@@ -42,102 +37,24 @@ class CheckoutController extends Controller
         $user = $request->user();
         $shippingAddress = $this->ownedShippingAddress($request, (int) $request->input('shipping_address_id'));
 
-        if ($shippingAddress instanceof \Illuminate\Http\JsonResponse) {
+        if ($shippingAddress instanceof JsonResponse) {
             return $shippingAddress;
         }
 
         try {
-            $order = DB::transaction(function () use ($request, $user, $shippingAddress) {
-                $quote = $this->pricing->quote(
-                    $request->input('items', []),
-                    $shippingAddress,
-                    $request->input('coupon_code'),
-                    $user,
-                );
-
-                $preparedItems = $quote['prepared_items'];
-                $coupon = $quote['coupon_model'];
-                $paymentMethod = $request->input('payment_method', 'cash_on_delivery');
-                $steadfastCodCharge = Order::steadfastCodChargeFor($paymentMethod, $quote['total']);
-
-                $order = Order::create([
-                    'order_number' => Order::generateOrderNumber(),
-                    'user_id' => $user->id,
-                    'order_source' => 'website',
-                    'customer_name' => $shippingAddress->name ?: ($user->name ?: 'Customer'),
-                    'customer_email' => $shippingAddress->email ?: ($user->email ?: ''),
-                    'customer_phone' => $shippingAddress->phone ?: $user->phone,
-                    'shipping_address_id' => $shippingAddress->id,
-                    'subtotal' => $quote['subtotal'],
-                    'tax' => $quote['tax'],
-                    'discount' => $quote['discount'],
-                    'shipping_cost' => $quote['shipping_cost'],
-                    'total' => $quote['total'],
-                    'coupon_id' => $coupon?->id,
-                    'coupon_code' => $coupon?->code,
-                    'steadfast_cod_charger' => $steadfastCodCharge,
-                    'payment_method' => $paymentMethod,
-                    'payment_status' => 'pending',
-                    'order_status' => 'pending',
-                    'shipping_method' => $quote['shipping_method'],
-                    'order_notes' => $request->filled('order_notes')
-                        ? trim((string) $request->input('order_notes'))
-                        : null,
-                ]);
-
-                $totalQuantityByProduct = [];
-
-                foreach ($preparedItems as $item) {
-                    $product = $item['product'];
-                    $variant = $item['variant'];
-
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $product->id,
-                        'product_variant_id' => $variant?->id,
-                        'variant_name' => $variant?->name,
-                        'product_name' => $product->name,
-                        'product_slug' => $product->slug,
-                        'product_sku' => $variant?->sku ?: $product->sku,
-                        'product_image' => $variant?->image ?: $product->getRawOriginal('thumbnail_image'),
-                        'price' => $item['price'],
-                        'regular_price' => $variant && $variant->regular_price !== null
-                            ? $variant->regular_price
-                            : $product->regular_price,
-                        'purchase_price' => $variant?->purchase_price ?? $product->purchase_price,
-                        'quantity' => $item['quantity'],
-                        'subtotal' => $item['subtotal'],
-                    ]);
-
-                    $this->orderStockService->deduct(
-                        $product->id,
-                        $variant?->id,
-                        $item['quantity']
-                    );
-
-                    $totalQuantityByProduct[$product->id] = ($totalQuantityByProduct[$product->id] ?? 0) + $item['quantity'];
-                }
-
-                $order->update(['stock_deducted_at' => now()]);
-
-                foreach ($totalQuantityByProduct as $productId => $quantity) {
-                    Product::whereKey($productId)->increment('num_of_sale', $quantity);
-                }
-
-                if ($coupon) {
-                    $coupon->increment('used_count');
-                }
-
-                OrderTimeline::create([
-                    'order_id' => $order->id,
-                    'updated_by' => $user->id,
-                    'description' => 'Order placed from website checkout.',
-                    'status' => 'Order Pending',
-                    'date' => now(),
-                ]);
-
-                return $order->load(['items', 'shippingAddress.deliveryArea', 'coupon']);
-            });
+            $order = $this->orders->place(
+                $request->input('items', []),
+                $shippingAddress,
+                $user,
+                [
+                    'name' => $shippingAddress->name ?: $user->name,
+                    'email' => $shippingAddress->email ?: $user->email,
+                    'phone' => $shippingAddress->phone ?: $user->phone,
+                ],
+                $request->input('coupon_code'),
+                $request->input('payment_method', 'cash_on_delivery'),
+                $request->input('order_notes'),
+            );
 
             return $this->success(
                 (new OrderResource($order))->resolve(),
@@ -182,7 +99,7 @@ class CheckoutController extends Controller
         $shippingAddress = null;
         if ($request->filled('shipping_address_id')) {
             $resolved = $this->ownedShippingAddress($request, (int) $request->input('shipping_address_id'));
-            if ($resolved instanceof \Illuminate\Http\JsonResponse) {
+            if ($resolved instanceof JsonResponse) {
                 return $resolved;
             }
             $shippingAddress = $resolved;
@@ -235,7 +152,7 @@ class CheckoutController extends Controller
         $shippingAddress = null;
         if ($request->filled('shipping_address_id')) {
             $resolved = $this->ownedShippingAddress($request, (int) $request->input('shipping_address_id'));
-            if ($resolved instanceof \Illuminate\Http\JsonResponse) {
+            if ($resolved instanceof JsonResponse) {
                 return $resolved;
             }
             $shippingAddress = $resolved;
@@ -285,7 +202,7 @@ class CheckoutController extends Controller
         $shippingAddress = null;
         if ($request->filled('shipping_address_id')) {
             $resolved = $this->ownedShippingAddress($request, (int) $request->input('shipping_address_id'));
-            if ($resolved instanceof \Illuminate\Http\JsonResponse) {
+            if ($resolved instanceof JsonResponse) {
                 return $resolved;
             }
             $shippingAddress = $resolved;
@@ -346,7 +263,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * @return ShippingAddress|\Illuminate\Http\JsonResponse
+     * @return ShippingAddress|JsonResponse
      */
     private function ownedShippingAddress(Request $request, int $id)
     {
