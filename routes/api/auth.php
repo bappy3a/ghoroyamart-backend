@@ -22,6 +22,14 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
         ->middleware('throttle:10,1')
         ->name('register');
 
+    Route::post('/register/verify', [PasswordAuthController::class, 'verifyRegistration'])
+        ->middleware('throttle:10,1')
+        ->name('register.verify');
+
+    Route::post('/register/resend-otp', [PasswordAuthController::class, 'resendRegistrationOtp'])
+        ->middleware('throttle:5,1')
+        ->name('register.resend-otp');
+
     Route::post('/login', [PasswordAuthController::class, 'login'])
         ->middleware('throttle:10,1')
         ->name('login');

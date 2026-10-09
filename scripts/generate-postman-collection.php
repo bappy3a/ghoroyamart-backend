@@ -122,7 +122,11 @@ JS,
         ]),
         requestItem('Register (Mobile + Password)', 'POST', '/api/auth/register', [
             'body' => ['name' => 'Test Customer', 'phone' => '{{phone}}', 'password' => 'secret1234', 'password_confirmation' => 'secret1234'],
-            'description' => 'Public. Creates an account and returns a Sanctum token. Password min 8 chars. Throttled 10/min.',
+            'description' => 'Public. Creates an account and sends a verification OTP (no token yet). Password min 8 chars. Throttled 10/min.',
+        ]),
+        requestItem('Verify Registration OTP', 'POST', '/api/auth/register/verify', [
+            'body' => ['phone' => '{{phone}}', 'otp' => '{{otp}}'],
+            'description' => 'Public. Verifies the registration OTP and returns a Sanctum token.',
             'test' => <<<'JS'
 if (pm.response.code >= 200 && pm.response.code < 300) {
     const json = pm.response.json();
@@ -130,6 +134,10 @@ if (pm.response.code >= 200 && pm.response.code < 300) {
     if (token) pm.collectionVariables.set('token', token);
 }
 JS,
+        ]),
+        requestItem('Resend Registration OTP', 'POST', '/api/auth/register/resend-otp', [
+            'body' => ['phone' => '{{phone}}'],
+            'description' => 'Public. Resends the verification OTP (30s cooldown). Throttled 5/min.',
         ]),
         requestItem('Login (Mobile + Password)', 'POST', '/api/auth/login', [
             'body' => ['phone' => '{{phone}}', 'password' => 'secret1234'],

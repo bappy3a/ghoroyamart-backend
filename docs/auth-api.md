@@ -33,30 +33,20 @@ Request:
 }
 ```
 
-Success `201`:
+Success `201` (no token yet — the mobile number must be verified first; an OTP is sent by SMS, or written to `storage/logs/laravel.log` in `local`):
 ```json
 {
   "success": true,
-  "message": "Registration successful.",
+  "message": "Registration successful. Please verify your mobile number with the OTP sent.",
   "data": {
-    "token": "2|UtdtyqAng...",
-    "token_type": "Bearer",
-    "profile_complete": false,
-    "user": {
-      "id": 3,
-      "name": "Test Customer",
-      "username": "user-01711000099",
-      "email": null,
-      "phone": "01711000099",
-      "phone_verified_at": null,
-      "status": "active",
-      "profile_complete": false
-    }
+    "phone": "01711000099",
+    "verification_required": true,
+    "resend_after": 30,
+    "expires_in": 300
   },
   "metadata": null
 }
 ```
-(`user` also contains avatar, gender, address fields, etc.)
 
 Validation error `422`:
 ```json
@@ -70,6 +60,39 @@ Validation error `422`:
   "metadata": null
 }
 ```
+
+---
+
+## 1a. Verify Registration OTP
+
+`POST /api/auth/register/verify` — throttle 10/min
+
+Request:
+```json
+{
+  "phone": "01711000099",
+  "otp": "925667"
+}
+```
+
+Success `200`: message `Mobile number verified successfully.`, `data` has `token`, `token_type`, `profile_complete`, `user` (with `phone_verified_at` set).
+
+Errors:
+
+| Code | Message |
+|------|---------|
+| 422 | `Please provide valid OTP details.` (validation) |
+| 422 | `Invalid OTP code.` |
+| 422 | `OTP expired or invalid. Please request a new one.` |
+| 429 | `Too many invalid attempts. Please request a new OTP.` (after 5 wrong OTPs) |
+
+## 1b. Resend Registration OTP
+
+`POST /api/auth/register/resend-otp` — throttle 5/min
+
+Request: `{ "phone": "01711000099" }`
+
+Success `200` (same response for unknown/already verified numbers): message `If this number is pending verification, an OTP has been sent.`, `data` same as Register. Errors: `422` invalid phone, `429` `Please wait N seconds before requesting another OTP.`, `500` send failure.
 
 ---
 
@@ -93,6 +116,7 @@ Errors:
 |------|---------|
 | 401 | `Invalid mobile number or password.` |
 | 403 | `Your account is not active. Please contact support.` |
+| 403 | `Mobile number is not verified. Please verify with the OTP.` (`data`: `{phone_verified: false, phone}`; use register/resend-otp then register/verify) |
 | 422 | `Mobile number and password are required.` (with field errors) |
 | 429 | `Too many failed attempts. Try again in N minute(s).` |
 
@@ -176,7 +200,7 @@ On success all existing tokens for the user are revoked, the phone is marked ver
 
 ## Typical flows
 
-- **Register:** `register` → use returned token.
+- **Register:** `register` → `register/verify` (OTP) → use returned token. Unverified users: `register/resend-otp` → `register/verify`.
 - **Login:** `login` → use returned token.
 - **Forgot password:** `forgot-password` → `reset-password` → `login`.
 

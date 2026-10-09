@@ -60,7 +60,105 @@ class PasswordAuthController extends Controller
             'password' => $request->input('password'),
         ]);
 
-        return $this->tokenResponse($user, 'Registration successful.', 201);
+        try {
+            $this->sendRegistrationOtp($user);
+        } catch (\Throwable $e) {
+            Log::error('Registration OTP failed', ['phone' => $phone, 'error' => $e->getMessage()]);
+
+            return $this->success($this->verificationPayload($phone), null, 'Registration successful, but the OTP could not be sent. Please request a new OTP.', 201);
+        }
+
+        return $this->success($this->verificationPayload($phone), null, 'Registration successful. Please verify your mobile number with the OTP sent.', 201);
+    }
+
+    /**
+     * Verify the registration OTP and return the Sanctum token.
+     */
+    public function verifyRegistration(Request $request)
+    {
+        $request->merge(['phone' => $this->normalizePhone((string) $request->input('phone'))]);
+
+        $validator = Validator::make($request->all(), [
+            'phone' => ['required', 'string', 'regex:'.self::PHONE_REGEX],
+            'otp' => ['required', 'digits:6'],
+        ], [
+            'phone.regex' => 'Please enter a valid 11 digit Bangladesh mobile number.',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error('Please provide valid OTP details.', $validator->errors(), null, 422);
+        }
+
+        $phone = $request->input('phone');
+        $user = User::query()->where('phone', $phone)->first();
+        $expiresKey = "reg_otp_expires:{$phone}";
+        $attemptsKey = "reg_otp_attempts:{$phone}";
+
+        if (! $user || blank($user->verification_code) || ! Cache::has($expiresKey)) {
+            return $this->error('OTP expired or invalid. Please request a new one.', null, null, 422);
+        }
+
+        Cache::add($attemptsKey, 0, now()->addMinutes(self::RESET_OTP_TTL_MINUTES));
+        if ((int) Cache::increment($attemptsKey) > self::RESET_MAX_OTP_ATTEMPTS) {
+            Cache::forget($expiresKey);
+            $user->update(['verification_code' => null]);
+
+            return $this->error('Too many invalid attempts. Please request a new OTP.', null, null, 429);
+        }
+
+        if (! hash_equals((string) $user->verification_code, (string) $request->input('otp'))) {
+            return $this->error('Invalid OTP code.', null, null, 422);
+        }
+
+        $user->forceFill([
+            'verification_code' => null,
+            'phone_verified_at' => $user->phone_verified_at ?? now(),
+        ])->save();
+
+        Cache::forget($expiresKey);
+        Cache::forget($attemptsKey);
+        Cache::forget("reg_otp_cooldown:{$phone}");
+
+        return $this->tokenResponse($user, 'Mobile number verified successfully.');
+    }
+
+    public function resendRegistrationOtp(Request $request)
+    {
+        $request->merge(['phone' => $this->normalizePhone((string) $request->input('phone'))]);
+
+        $validator = Validator::make($request->all(), [
+            'phone' => ['required', 'string', 'regex:'.self::PHONE_REGEX],
+        ], [
+            'phone.regex' => 'Please enter a valid 11 digit Bangladesh mobile number.',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error('Valid mobile number is required.', $validator->errors(), null, 422);
+        }
+
+        $phone = $request->input('phone');
+        $user = User::query()->where('phone', $phone)->first();
+
+        // Same response for unknown / already verified numbers to avoid revealing accounts.
+        if ($user && $user->status === 'active' && ! $user->phone_verified_at) {
+            $cooldownKey = "reg_otp_cooldown:{$phone}";
+
+            if (Cache::has($cooldownKey)) {
+                $retryAfter = max(1, (int) Cache::get($cooldownKey) - time());
+
+                return $this->error("Please wait {$retryAfter} seconds before requesting another OTP.", null, null, 429);
+            }
+
+            try {
+                $this->sendRegistrationOtp($user);
+            } catch (\Throwable $e) {
+                Log::error('Registration OTP resend failed', ['phone' => $phone, 'error' => $e->getMessage()]);
+
+                return $this->error('Failed to send OTP. Please try again.', null, null, 500);
+            }
+        }
+
+        return $this->success($this->verificationPayload($phone), null, 'If this number is pending verification, an OTP has been sent.');
     }
 
     public function login(Request $request)
@@ -100,6 +198,10 @@ class PasswordAuthController extends Controller
 
         if ($user->status !== 'active') {
             return $this->error('Your account is not active. Please contact support.', null, null, 403);
+        }
+
+        if (! $user->phone_verified_at) {
+            return $this->error('Mobile number is not verified. Please verify with the OTP.', ['phone_verified' => false, 'phone' => $user->phone], null, 403);
         }
 
         $user->forceFill(['failed_login_attempts' => 0, 'locked_until' => null])->save();
@@ -206,6 +308,26 @@ class PasswordAuthController extends Controller
         Cache::forget("pwd_reset_cooldown:{$phone}");
 
         return $this->success(null, null, 'Password reset successful. Please login with your new password.');
+    }
+
+    private function sendRegistrationOtp(User $user): void
+    {
+        $phone = $user->phone;
+
+        send_verification_code($user);
+        Cache::put("reg_otp_expires:{$phone}", true, now()->addMinutes(self::RESET_OTP_TTL_MINUTES));
+        Cache::forget("reg_otp_attempts:{$phone}");
+        Cache::put("reg_otp_cooldown:{$phone}", time() + self::RESET_COOLDOWN_SECONDS, self::RESET_COOLDOWN_SECONDS);
+    }
+
+    private function verificationPayload(string $phone): array
+    {
+        return [
+            'phone' => $phone,
+            'verification_required' => true,
+            'resend_after' => self::RESET_COOLDOWN_SECONDS,
+            'expires_in' => self::RESET_OTP_TTL_MINUTES * 60,
+        ];
     }
 
     private function tokenResponse(User $user, string $message, int $code = 200)

@@ -297,13 +297,52 @@
                                 "register"
                             ]
                         },
-                        "description": "Public. Creates an account and returns a Sanctum token. Password min 8 chars. Throttled 10/min.",
+                        "description": "Public. Creates an account and sends a verification OTP (no token yet). Password min 8 chars. Throttled 10/min.",
                         "auth": {
                             "type": "noauth"
                         },
                         "body": {
                             "mode": "raw",
                             "raw": "{\n    \"name\": \"Test Customer\",\n    \"phone\": \"{{phone}}\",\n    \"password\": \"secret1234\",\n    \"password_confirmation\": \"secret1234\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Registration OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "verify"
+                            ]
+                        },
+                        "description": "Public. Verifies the registration OTP and returns a Sanctum token.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\",\n    \"otp\": \"{{otp}}\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -327,6 +366,45 @@
                             }
                         }
                     ]
+                },
+                {
+                    "name": "Resend Registration OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register/resend-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "resend-otp"
+                            ]
+                        },
+                        "description": "Public. Resends the verification OTP (30s cooldown). Throttled 5/min.",
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
                 },
                 {
                     "name": "Login (Mobile + Password)",
