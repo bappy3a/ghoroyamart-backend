@@ -54,12 +54,12 @@ class HomeController extends Controller
         $counts = [
             'sliders' => 10,
             'popular_categories' => 8,
-            'featured' => 8,
-            'best_selling' => 10,
-            'trending' => 15,
-            'new_arrival' => 12,
-            'popular' => 12,
-            'diamond' => 12,
+            'featured' => 5,
+            'best_selling' => 5,
+            'trending' => 5,
+            'new_arrival' => 5,
+            'popular' => 5,
+            'diamond' => 5,
             'brands' => 10,
         ];
         $sliders = $this->sliders($counts['sliders']);
@@ -240,6 +240,7 @@ class HomeController extends Controller
             $products = $this->storefrontQuery()
                 ->with(['category.parent', 'brand'])
                 ->whereIn('id', $productIds)
+                ->take(5)
                 ->get()
                 ->sortBy(fn (Product $p) => array_search($p->id, $productIds, true))
                 ->values();
@@ -326,7 +327,7 @@ class HomeController extends Controller
                     ->whereBetween('price', [$minPrice, $maxPrice])
                     ->orderByDesc('num_of_sale')
                     ->orderByDesc('id')
-                    ->limit(8)
+                    ->limit(5)
                     ->get();
 
                 return [

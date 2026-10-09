@@ -71,6 +71,11 @@
                                         <a href="{{ route('products.create') }}" class="nav-link {{ active_menu(['products.create'], 'active') }}">Create Product</a>
                                     </li>
                                 @endcan
+                                @can('products.show')
+                                    <li class="nav-item">
+                                        <a href="{{ route('products.import-export') }}" class="nav-link {{ active_menu(['products.import-export', 'products.import-*', 'products.export'], 'active') }}">Import / Export (Excel)</a>
+                                    </li>
+                                @endcan
                                 @can('variant-attributes.show')
                                     <li class="nav-item">
                                         <a href="{{ route('variant-attributes.index') }}" class="nav-link {{ active_menu(['variant-attributes.*'], 'active') }}">Variant Attributes</a>

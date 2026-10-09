@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductImportExportController;
 use App\Http\Controllers\Admin\PromotionLandingPageController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\SliderController;
@@ -23,6 +24,10 @@ Route::resource('categories', CategoryController::class)->except(['show']);
 Route::resource('brands', BrandController::class)->except(['show']);
 Route::resource('sliders', SliderController::class)->except(['show']);
 Route::resource('units', UnitController::class)->only(['index', 'store', 'update']);
+Route::get('product-import-export', [ProductImportExportController::class, 'index'])->name('products.import-export');
+Route::get('product-import-export/template', [ProductImportExportController::class, 'template'])->name('products.import-template');
+Route::get('product-import-export/export', [ProductImportExportController::class, 'export'])->name('products.export');
+Route::post('product-import-export/import', [ProductImportExportController::class, 'import'])->name('products.import-create');
 Route::resource('products', ProductController::class);
 Route::post('products/bulk-update-location', [ProductController::class, 'bulkUpdateLocation'])->name('products.bulk-update-location');
 Route::post('products/editor-upload', [\App\Http\Controllers\Admin\EditorUploadController::class, 'store'])->name('products.create-editor-upload');
