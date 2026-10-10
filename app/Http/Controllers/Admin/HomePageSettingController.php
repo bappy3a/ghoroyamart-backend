@@ -51,7 +51,19 @@ class HomePageSettingController extends Controller
         ], $settings);
         $categories = Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
-        return view('admin.home-page-settings.index', compact('settings', 'categories'));
+        $highlightSettings = collect([
+            'home_top_bar_items' => 'Top Bar Items',
+            'home_promise_items' => 'Promises (scrolling strip)',
+        ])->map(fn ($label, $key) => (object) [
+            'key' => $key,
+            'label' => $label,
+            'description' => $key === 'home_top_bar_items'
+                ? 'Short highlights shown at the very top of every page.'
+                : 'Promises shown below the home page slider. Subtitle is optional.',
+            'value' => Setting::get($key),
+        ]);
+
+        return view('admin.home-page-settings.index', compact('settings', 'categories', 'highlightSettings'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -68,7 +80,18 @@ class HomePageSettingController extends Controller
         unset($dealRowInput);
         $request->merge(['deal_section_items' => $dealRowsInput]);
 
+        $highlightRules = [];
+        foreach (['home_top_bar_items', 'home_promise_items'] as $key) {
+            $highlightRules[$key . '_submitted'] = ['sometimes', 'boolean'];
+            $highlightRules[$key] = ['nullable', 'array'];
+            $highlightRules[$key . '.*'] = ['array'];
+            $highlightRules[$key . '.*.icon'] = ['nullable', 'string', 'max:80'];
+            $highlightRules[$key . '.*.title'] = ['nullable', 'string', 'max:80'];
+            $highlightRules[$key . '.*.subtitle'] = ['nullable', 'string', 'max:120'];
+        }
+
         $data = $request->validate([
+            ...$highlightRules,
             'home_slider_count' => ['nullable', 'integer', 'min:1', 'max:30'],
             'home_popular_categories_count' => ['nullable', 'integer', 'min:1', 'max:30'],
             'home_featured_products_count' => ['nullable', 'integer', 'min:1', 'max:50'],
@@ -136,6 +159,21 @@ class HomePageSettingController extends Controller
             'deal_section_item_images' => ['nullable', 'array'],
             'deal_section_item_images.*' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        foreach (['home_top_bar_items' => 'Top Bar Items', 'home_promise_items' => 'Promises (scrolling strip)'] as $key => $label) {
+            if (! $request->boolean($key . '_submitted')) {
+                continue;
+            }
+
+            $items = home_highlight_items(json_encode(array_values($data[$key] ?? [])), $key);
+            Setting::updateOrCreate(['key' => $key], [
+                'value' => json_encode($items),
+                'group' => 'Home Highlights',
+                'type' => 'highlights',
+                'label' => $label,
+                'sort_order' => $key === 'home_top_bar_items' ? 1 : 2,
+            ]);
+        }
 
         $fields = [
             'home_slider_count',

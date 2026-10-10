@@ -35,6 +35,9 @@
                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button" role="tab">General</button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-highlights" type="button" role="tab">Home Highlights</button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-banners" type="button" role="tab">Category Banners</button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -80,6 +83,15 @@
                     <div class="col-md-4"><label class="form-label">Top Selling Title</label><input type="text" class="form-control" name="home_top_selling_title" value="{{ old('home_top_selling_title', $settings['home_top_selling_title']) }}"></div>
                 </div>
 
+            </div>
+
+            <div class="tab-pane fade" id="tab-highlights" role="tabpanel">
+                <h5 class="mb-3">Home Highlights</h5>
+                <div class="row g-4">
+                    @foreach($highlightSettings as $setting)
+                        @include('admin.settings._highlights')
+                    @endforeach
+                </div>
             </div>
 
             <div class="tab-pane fade" id="tab-banners" role="tabpanel">
@@ -188,6 +200,7 @@
 @endsection
 
 @section('script')
+@include('admin.settings._highlights-script')
 @php
     $homePageImageUrls = collect($settings['home_category_banners'] ?? [])
         ->concat($settings['home_shopping_section_items'] ?? [])
